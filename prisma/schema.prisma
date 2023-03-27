@@ -98,7 +98,7 @@ model IngrediantName {
   name        String
   Ingrediants Ingrediants[]
 
-  //we want to search fast for recipe name, used for typeahead
+  //we want to search fast for ingrediants names, used for typeahead, and overall recipe searching
   @@index([name])
 }
 
