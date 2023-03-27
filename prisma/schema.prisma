@@ -76,6 +76,7 @@ model Recipe {
   ratings           Rating[]
   favoritForUsers   User[]        @relation("favorits")
   favoritForUsersID String[]
+  image             String
 
   //we want to show the user he's recipes fast
   @@index([userId])
