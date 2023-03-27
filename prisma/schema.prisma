@@ -42,16 +42,16 @@ model Session {
 }
 
 model User {
-  id              String    @id @default(cuid())
+  id              String     @id @default(cuid())
   name            String?
-  email           String?   @unique
+  email           String?    @unique
   emailVerified   DateTime?
   image           String?
   accounts        Account[]
   sessions        Session[]
   recipes         Recipe[]
   ratings         Rating[]
-  favoritsRecipes Recipe[]  @relation("favorits")
+  favoritsRecipes Favorits[]
 }
 
 model VerificationToken {
@@ -63,20 +63,19 @@ model VerificationToken {
 }
 
 model Recipe {
-  id                String        @id @default(cuid())
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  title             String
-  user              User          @relation(fields: [userId], references: [id])
-  userId            String
-  ingrediants       Ingrediants[]
-  description       String
-  yield             Int
-  directions        String
-  ratings           Rating[]
-  favoritForUsers   User[]        @relation("favorits")
-  favoritForUsersID String[]
-  image             String
+  id          String        @id @default(cuid())
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  title       String
+  user        User          @relation(fields: [userId], references: [id])
+  userId      String
+  ingrediants Ingrediants[]
+  description String
+  yield       Int
+  directions  String
+  ratings     Rating[]
+  image       String
+  favorits    Favorits[]
 
   //we want to show the user he's recipes fast
   @@index([userId])
@@ -103,8 +102,8 @@ model IngrediantName {
   @@index([name])
 }
 
+//relation of many to many, intermidiat table to handle the user - recipe rating matching
 model Rating {
-  id       String  @id @default(cuid())
   user     User    @relation(fields: [userID], references: [id])
   userID   String
   stars    Int
@@ -112,6 +111,18 @@ model Rating {
   recipe   Recipe  @relation(fields: [recipeID], references: [id])
   comment  String?
 
+  @@id([userID, recipeID])
   //we want to allow fetching fast the recipe rating and allow a user to see fast if he rated this recipe
+  @@index([userID, recipeID])
+}
+
+//relation of many to many, intermidiat table to handle the user - recipe favorit matching
+model Favorits {
+  user     User   @relation(fields: [userID], references: [id])
+  userID   String
+  recipe   Recipe @relation(fields: [recipeID], references: [id])
+  recipeID String
+
+  @@id([userID, recipeID])
   @@index([userID, recipeID])
 }
