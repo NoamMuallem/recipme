@@ -21,12 +21,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? // @db.Text
-  access_token      String? // @db.Text
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? // @db.Text
+  id_token          String? @db.Text
   session_state     String?
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -76,6 +76,7 @@ model Recipe {
   ratings     Rating[]
   image       String
   favorits    Favorits[]
+  tags        RecipeTags[]
 
   //we want to show the user he's recipes fast
   @@index([userId])
@@ -95,7 +96,9 @@ model Ingrediants {
 
 model IngrediantName {
   id          String        @id @default(cuid())
-  name        String
+  name        String        @unique
+  //we want to count how many recipes uses this ingrediants, so when non is using we will not sugest it
+  count       Int
   Ingrediants Ingrediants[]
 
   //we want to search fast for ingrediants names, used for typeahead, and overall recipe searching
@@ -125,4 +128,20 @@ model Favorits {
 
   @@id([userID, recipeID])
   @@index([userID, recipeID])
+}
+
+model RecipeTags {
+  tag      Tag    @relation(fields: [tagID], references: [id])
+  tagID    String
+  recipe   Recipe @relation(fields: [recipeID], references: [id])
+  recipeID String
+
+  @@id([tagID, recipeID])
+  @@index([tagID, recipeID])
+}
+
+model Tag {
+  id      String       @id @default(cuid())
+  name    String       @unique
+  recipes RecipeTags[]
 }
