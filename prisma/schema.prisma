@@ -96,7 +96,7 @@ model Ingredient {
 model IngredientsName {
   id          String       @id @default(cuid())
   name        String       @unique
-  //for keeping track of popular ones and "kill" dead one's
+  //to keep track on popular one's and "kill" dead ones
   count       Int
   ingredients Ingredient[]
 
