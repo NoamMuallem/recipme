@@ -50,8 +50,8 @@ model User {
   accounts        Account[]
   sessions        Session[]
   recipes         Recipe[]
-  ratings         Rating[]
-  favoritsRecipes Favorits[]
+  favoritsRecipes Favorite[]
+  Rating          Rating[]
 }
 
 model VerificationToken {
@@ -63,46 +63,44 @@ model VerificationToken {
 }
 
 model Recipe {
-  id          String        @id @default(cuid())
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  title       String
-  user        User          @relation(fields: [userId], references: [id])
-  userId      String
-  ingrediants Ingrediants[]
-  description String
-  yield       Int
-  directions  String
-  ratings     Rating[]
-  image       String
-  favorits    Favorits[]
-  tags        RecipeTags[]
+  id            String       @id @default(cuid())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  title         String
+  user          User         @relation(fields: [userId], references: [id])
+  userId        String
+  ingredients   Ingredient[]
+  description   String
+  yield         Int
+  directions    String
+  ratings       Rating[]
+  averageRating Float        @default(0.0)
+  image         String
+  favoritedBy   Favorite[]
+  recipeTags    RecipeTag[]
 
-  //we want to show the user he's recipes fast
-  @@index([userId])
+  @@index([userId, averageRating, createdAt]) // Index for Query 1, 3 and 4
 }
 
-model Ingrediants {
-  id               String         @id @default(cuid())
-  ingrediantName   IngrediantName @relation(fields: [ingrediantNameId], references: [id])
-  ingrediantNameId String
+model Ingredient {
+  id               String          @id @default(cuid())
+  ingredientName   IngredientsName @relation(fields: [ingredientNameId], references: [id])
+  ingredientNameId String
   amount           Float
   recipeID         String
-  recipe           Recipe         @relation(fields: [recipeID], references: [id])
+  recipe           Recipe          @relation(fields: [recipeID], references: [id])
 
-  //find fast the recipe ingrediants
-  @@index([recipeID])
+  @@index([recipeID]) // Index for Query 6 and 8
 }
 
-model IngrediantName {
-  id          String        @id @default(cuid())
-  name        String        @unique
-  //we want to count how many recipes uses this ingrediants, so when non is using we will not sugest it
+model IngredientsName {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  //for keeping track of popular ones and "kill" dead one's
   count       Int
-  Ingrediants Ingrediants[]
+  ingredients Ingredient[]
 
-  //we want to search fast for ingrediants names, used for typeahead, and overall recipe searching
-  @@index([name])
+  @@index([name, count]) // Index for Query 14 and 15
 }
 
 //relation of many to many, intermidiat table to handle the user - recipe rating matching
@@ -114,34 +112,39 @@ model Rating {
   recipe   Recipe  @relation(fields: [recipeID], references: [id])
   comment  String?
 
-  @@id([userID, recipeID])
-  //we want to allow fetching fast the recipe rating and allow a user to see fast if he rated this recipe
-  @@index([userID, recipeID])
+  @@id([userID, recipeID]) // Unique constraint for Query 17
+  @@index([userID, recipeID]) // Index for Query 19 and 20
 }
 
 //relation of many to many, intermidiat table to handle the user - recipe favorit matching
-model Favorits {
+model Favorite {
   user     User   @relation(fields: [userID], references: [id])
   userID   String
   recipe   Recipe @relation(fields: [recipeID], references: [id])
   recipeID String
 
-  @@id([userID, recipeID])
-  @@index([userID, recipeID])
+  @@id([userID, recipeID]) // Unique constraint for Query 5
+  @@index([userID, recipeID]) // Index for Query 5
+  @@map("Favorits")
 }
 
-model RecipeTags {
+model RecipeTag {
   tag      Tag    @relation(fields: [tagID], references: [id])
   tagID    String
   recipe   Recipe @relation(fields: [recipeID], references: [id])
   recipeID String
 
-  @@id([tagID, recipeID])
-  @@index([tagID, recipeID])
+  @@id([tagID, recipeID]) // Unique constraint for Query 10
+  @@index([tagID, recipeID]) // Index for Query 10
+  @@map("RecipeTag")
 }
 
 model Tag {
-  id      String       @id @default(cuid())
-  name    String       @unique
-  recipes RecipeTags[]
+  id      String      @id @default(cuid())
+  name    String      @unique
+  recipes RecipeTag[]
+  //to keep track on popular one's and "kill" dead ones
+  count   Int
+
+  @@index([name, count]) // Index for Query 3, 4, and 14
 }
