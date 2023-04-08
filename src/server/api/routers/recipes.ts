@@ -150,7 +150,7 @@ export const recipeRouter = createTRPCRouter({
         tags: z.string().array(),
       }) satisfies z.ZodType<RecipeInput>
     )
-    .query(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { tags, ingredients, ...rest } = input;
       const userID = ctx.session.user.id;
 
@@ -206,7 +206,7 @@ export const recipeRouter = createTRPCRouter({
         tags: z.string().array(),
       }) satisfies z.ZodType<RecipeInput>
     )
-    .query(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { tags, ingredients, id, ...rest } = input;
 
       // Query 8
@@ -298,7 +298,7 @@ export const recipeRouter = createTRPCRouter({
         id: z.string({ required_error: "recipe ID must be provided" }),
       })
     )
-    .query(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { id } = input;
       // Query 10
       const recipeToDelete = await ctx.prisma.recipe.findUnique({
