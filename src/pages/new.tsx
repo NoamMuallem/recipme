@@ -3,7 +3,7 @@ import { api } from "y/utils/api";
 const NewRecipe = () => {
   const { mutate, isLoading } = api.recipe.createRecipe.useMutation();
   return (
-    <div>
+    <>
       <button
         onClick={() => {
           mutate({
@@ -20,7 +20,7 @@ const NewRecipe = () => {
       >
         Create
       </button>
-    </div>
+    </>
   );
 };
 export default NewRecipe;
