@@ -3,12 +3,7 @@ import { z } from "zod";
 
 import { createTRPCRouter } from "y/server/api/trpc";
 
-const paginationInputSchema = {
-  limit: z.number().default(10),
-  page: z.number().default(1),
-};
-
-type RecipeInput = {
+export type RecipeInput = {
   title: string;
   ingredients: {
     amount: number;
@@ -18,7 +13,41 @@ type RecipeInput = {
   yield: number;
   directions: string;
   image: string;
-  tags: string[];
+  tags: {
+    name: string;
+  }[];
+};
+
+export const ZodRecipeInput = z.object({
+  title: z
+    .string({ required_error: "Recipe title must be provided" })
+    .min(4)
+    .max(15),
+  ingredients: z
+    .object({
+      amount: z.number({
+        required_error: "amount of ingredient must be provided",
+      }),
+      name: z
+        .string({ required_error: "ingredient name must be provided" })
+        .min(3)
+        .max(15),
+    })
+    .array(),
+  description: z.string(),
+  yield: z.number(),
+  directions: z.string(),
+  image: z.string(),
+  tags: z
+    .object({
+      name: z.string({ required_error: "tag name must be provided" }),
+    })
+    .array(),
+}) satisfies z.ZodType<RecipeInput>;
+
+const paginationInputSchema = {
+  limit: z.number().default(10),
+  page: z.number().default(1),
 };
 
 export const recipeRouter = createTRPCRouter({
@@ -126,30 +155,7 @@ export const recipeRouter = createTRPCRouter({
     }),
 
   createRecipe: protectedProcedure
-    .input(
-      z.object({
-        title: z
-          .string({ required_error: "Recipe title must be provided" })
-          .min(4)
-          .max(15),
-        ingredients: z
-          .object({
-            amount: z.number({
-              required_error: "amount of ingredient must be provided",
-            }),
-            name: z
-              .string({ required_error: "ingredient name must be provided" })
-              .min(3)
-              .max(15),
-          })
-          .array(),
-        description: z.string(),
-        yield: z.number(),
-        directions: z.string(),
-        image: z.string(),
-        tags: z.string().array(),
-      }) satisfies z.ZodType<RecipeInput>
-    )
+    .input(ZodRecipeInput)
     .mutation(async ({ ctx, input }) => {
       const { tags, ingredients, ...rest } = input;
       const userID = ctx.session.user.id;
@@ -164,11 +170,11 @@ export const recipeRouter = createTRPCRouter({
             },
           },
           recipeTags: {
-            create: tags.map((tag) => ({
+            create: tags.map(({ name }) => ({
               tag: {
                 connectOrCreate: {
-                  create: { name: tag, count: 1 },
-                  where: { name: tag },
+                  create: { name, count: 1 },
+                  where: { name },
                 },
               },
             })),
@@ -203,7 +209,11 @@ export const recipeRouter = createTRPCRouter({
         yield: z.number(),
         directions: z.string(),
         image: z.string(),
-        tags: z.string().array(),
+        tags: z
+          .object({
+            name: z.string({ required_error: "tag name must be provided" }),
+          })
+          .array(),
       }) satisfies z.ZodType<RecipeInput>
     )
     .mutation(async ({ ctx, input }) => {
@@ -242,9 +252,9 @@ export const recipeRouter = createTRPCRouter({
       );
 
       // Find added and removed tags
-      const addedTags = tags.filter((tag) => !currentTags.includes(tag));
+      const addedTags = tags.filter(({ name }) => !currentTags.includes(name));
       const removedTags = currentTags.filter(
-        (tagID) => !tags.map((tag) => tag).includes(tagID)
+        (tagID) => !tags.map(({ name }) => name).includes(tagID)
       );
 
       // Find added and removed ingredients
@@ -265,11 +275,11 @@ export const recipeRouter = createTRPCRouter({
           ...rest,
           recipeTags: {
             deleteMany: removedTags.map((tagID) => ({ tagID })),
-            create: addedTags.map((tag) => ({
+            create: addedTags.map(({ name }) => ({
               tag: {
                 connectOrCreate: {
-                  create: { name: tag, count: 1 },
-                  where: { name: tag },
+                  create: { name, count: 1 },
+                  where: { name },
                 },
               },
             })),
