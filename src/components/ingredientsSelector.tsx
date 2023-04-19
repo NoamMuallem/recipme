@@ -1,75 +1,103 @@
-import React, { useState, useEffect } from "react";
-import Spinner from "./spinner";
 import { type IngredientsName } from "@prisma/client";
-import { api } from "y/utils/api";
+import React, { useState, useEffect } from "react";
 import { useDebounce } from "use-debounce";
+import { api } from "y/utils/api";
+import Spinner from "./spinner";
+import { NUMBER_OF_CHARACTERS_NEEDED_FOR_INGREDIENTS_TYPEAHEAD } from "y/constants";
 
-interface IngredientSelectorProp {
-  onSelect: (value: string) => void;
+interface IngredientAutocompleteProps {
+  onSelect: (name: string, amount: number) => void;
+  initialAmount: number;
 }
 
-// NOTE: I tried to make this component more generic but because the query (for the typeahead) needs the raw input
-// I hade to put the query inside and so the generic autocomplete became the IngredientsSelector
-// because in the new recipe page there are multiple dynamic instances of this component I could not take the input state out
-const IngredientSelector = ({ onSelect }: IngredientSelectorProp) => {
-  const [options, setOptions] = useState<string[]>([]);
+const IngredientAutocomplete: React.FC<IngredientAutocompleteProps> = ({
+  onSelect,
+  initialAmount,
+}) => {
   const [inputValue, setInputValue] = useState("");
+  const [options, setOptions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  // added debounce to prevent sending requests for nothing to the server
-  const [debouncedInputValue] = useDebounce(inputValue, 500);
+  const [debouncedInputValue] = useDebounce(inputValue, 300);
+  const [amount, setAmount] = useState(initialAmount);
 
-  const { data: ingredientsOptions, isLoading: isIngredientsLoading } =
-    api.ingredients.suggestIngredients.useQuery({
-      text: debouncedInputValue,
-    });
+  const { data: IngredientsOptions, isLoading: isIngredientsLoading } =
+    api.ingredients.suggestIngredients.useQuery(
+      {
+        text: debouncedInputValue,
+      },
+      {
+        enabled:
+          debouncedInputValue.length >
+          NUMBER_OF_CHARACTERS_NEEDED_FOR_INGREDIENTS_TYPEAHEAD,
+      }
+    );
 
   useEffect(() => {
-    if (ingredientsOptions) {
+    if (IngredientsOptions) {
       setOptions(
-        ingredientsOptions.map((option: IngredientsName) => option.name)
+        IngredientsOptions.map((option: IngredientsName) => option.name)
       );
     }
-  }, [ingredientsOptions]);
+  }, [IngredientsOptions]);
 
-  const handleSelect = (value: string) => {
+  const handleSelect = (value: string, amount: number) => {
     setInputValue(value);
     setOptions([]);
     setShowSuggestions(false);
-    onSelect(value);
+    onSelect(value, amount);
   };
 
   return (
-    <div className="relative">
+    <div className="flex">
       <input
-        type="text"
-        className="input-bordered input w-full"
-        placeholder="Search"
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        onFocus={() => setShowSuggestions(true)}
-        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+        type="number"
+        className="input-bordered input mr-2"
+        placeholder="Amount"
+        value={amount}
+        onChange={(e) => setAmount(Number(e.target.value))}
       />
-      {showSuggestions && options.length > 0 && (
-        <div className="absolute left-0 z-10 mt-1 w-full rounded-md border border-gray-300 bg-white shadow-lg">
-          <ul className="max-h-48 overflow-auto">
-            {isIngredientsLoading ? (
-              <Spinner />
-            ) : (
-              options.map((suggestion, index) => (
-                <li
-                  key={index}
-                  className="cursor-pointer px-3 py-2 hover:bg-gray-200"
-                  onClick={() => handleSelect(suggestion)}
-                >
-                  {suggestion}
-                </li>
-              ))
-            )}
-          </ul>
-        </div>
-      )}
+      <div className="relative">
+        <input
+          type="text"
+          className="input-bordered input w-full"
+          placeholder="Search ingredients"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+        />
+        {showSuggestions &&
+          options.length > 0 &&
+          inputValue.length >
+            NUMBER_OF_CHARACTERS_NEEDED_FOR_INGREDIENTS_TYPEAHEAD && (
+            <div className="absolute left-0 z-10 mt-1 w-full rounded-md border border-gray-300 bg-white shadow-lg">
+              <ul className="max-h-48 overflow-auto">
+                {isIngredientsLoading ? (
+                  <Spinner />
+                ) : (
+                  options.map((suggestion, index) => (
+                    <li
+                      key={index}
+                      className="cursor-pointer px-3 py-2 hover:bg-gray-200"
+                      onClick={() => handleSelect(suggestion, amount)}
+                    >
+                      {suggestion}
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+          )}
+      </div>
+      <button
+        type="button"
+        className="btn-primary btn ml-2"
+        onClick={() => handleSelect(inputValue, amount)}
+      >
+        Add
+      </button>
     </div>
   );
 };
 
-export default IngredientSelector;
+export default IngredientAutocomplete;

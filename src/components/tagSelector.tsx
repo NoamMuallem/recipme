@@ -37,35 +37,44 @@ const TagSelector = ({ onSelect }: TagSelectorProps) => {
   };
 
   return (
-    <div className="relative">
-      <input
-        type="text"
-        className="input-bordered input w-full"
-        placeholder="Search"
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        onFocus={() => setShowSuggestions(true)}
-        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-      />
-      {showSuggestions && options.length > 0 && (
-        <div className="absolute left-0 z-10 mt-1 w-full rounded-md border border-gray-300 bg-white shadow-lg">
-          <ul className="max-h-48 overflow-auto">
-            {isTagsLoading ? (
-              <Spinner />
-            ) : (
-              options.map((suggestion, index) => (
-                <li
-                  key={index}
-                  className="cursor-pointer px-3 py-2 hover:bg-gray-200"
-                  onClick={() => handleSelect(suggestion)}
-                >
-                  {suggestion}
-                </li>
-              ))
-            )}
-          </ul>
-        </div>
-      )}
+    <div className="flex">
+      <div className="relative">
+        <input
+          type="text"
+          className="input-bordered input w-full"
+          placeholder="Search"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+        />
+        {showSuggestions && options.length > 0 && (
+          <div className="absolute left-0 z-10 mt-1 w-full rounded-md border border-gray-300 bg-white shadow-lg">
+            <ul className="max-h-48 overflow-auto">
+              {isTagsLoading ? (
+                <Spinner />
+              ) : (
+                options.map((suggestion, index) => (
+                  <li
+                    key={index}
+                    className="cursor-pointer px-3 py-2 hover:bg-gray-200"
+                    onClick={() => handleSelect(suggestion)}
+                  >
+                    {suggestion}
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+        )}
+      </div>
+      <button
+        type="button"
+        className="btn-primary btn ml-2"
+        onClick={() => handleSelect(inputValue)}
+      >
+        Add
+      </button>
     </div>
   );
 };
