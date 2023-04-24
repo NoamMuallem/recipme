@@ -1,12 +1,9 @@
-// import { Recipe } from "@prisma/client";
 import { type Recipe } from "@prisma/client";
 import { type NextPage } from "next";
 import Head from "next/head";
 import { useState } from "react";
 import Filters from "y/components/filters";
 import { type Filter, type Sort } from "y/server/api/routers/recipes";
-// import Spinner from "y/components/spinner";
-// import { api } from "y/utils/api";
 
 const Home: NextPage = () => {
   const [sort, setSort] = useState<Sort>({

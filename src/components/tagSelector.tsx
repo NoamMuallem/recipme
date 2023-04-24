@@ -110,7 +110,7 @@ const AsyncSelect = ({ onSelect, isMulti = false }: AsyncSelectProps) => {
             </div>
           )}
         </div>
-        {isMulti && (
+        {!isMulti && (
           <button
             type="button"
             className="btn-primary btn ml-2"

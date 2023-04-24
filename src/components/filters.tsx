@@ -1,6 +1,7 @@
 import React from "react";
 import { Filter, Sort } from "y/server/api/routers/recipes";
 import TagSelector from "./tagSelector";
+import { IngredientNameAutocomplete } from "./ingredientsSelector";
 
 const Filters = ({
   sort,
@@ -101,6 +102,14 @@ const Filters = ({
         onSelect={(values: string | string[]) => {
           if (Array.isArray(values)) {
             setFilter({ ...filters, tags: values });
+          }
+        }}
+      />
+      <IngredientNameAutocomplete
+        isMulti
+        onSelect={(value: string | string[]) => {
+          if (Array.isArray(value)) {
+            setFilter({ ...filters, ingredients: value });
           }
         }}
       />
