@@ -12,16 +12,16 @@ export type Filter = {
 };
 
 export const ZodFilter = {
-  ingredients: z.string().array(),
-  tags: z.string().array(),
-  title: z.string(),
-  rating: z.number(),
+  ingredients: z.string().array().optional(),
+  tags: z.string().array().optional(),
+  title: z.string().optional(),
+  rating: z.number().optional(),
   favoritesOnly: z.boolean().default(false),
 };
 
 export type Sort = {
-  direction?: "desc" | "asc";
-  field?: "title" | "createdAt" | "averageRating";
+  direction: "desc" | "asc";
+  field: "title" | "createdAt" | "averageRating";
 };
 
 export const ZodSort = {
@@ -502,7 +502,7 @@ export const recipeRouter = createTRPCRouter({
 const buildWhereFilter = (filter: Filter) => {
   const where: Prisma.RecipeWhereInput = {};
 
-  if (filter?.ingredients) {
+  if (filter?.ingredients && filter.ingredients.length > 0) {
     where.ingredients = {
       some: {
         ingredientName: {
@@ -514,7 +514,7 @@ const buildWhereFilter = (filter: Filter) => {
     };
   }
 
-  if (filter.tags) {
+  if (filter?.tags && filter.tags.length > 0) {
     where.recipeTags = {
       some: {
         tag: {

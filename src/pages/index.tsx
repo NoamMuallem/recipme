@@ -3,18 +3,26 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import { useState } from "react";
 import Filters from "y/components/filters";
+import Spinner from "y/components/spinner";
 import { type Filter, type Sort } from "y/server/api/routers/recipes";
+import { api } from "y/utils/api";
 
 const Home: NextPage = () => {
   const [sort, setSort] = useState<Sort>({
     direction: "desc",
     field: "createdAt",
   });
-  const [filters, setFilters] = useState<Filter>({
+  const [filter, setFilter] = useState<Filter>({
     ingredients: [],
     rating: 0,
     tags: [],
     title: "",
+  });
+
+  const { data, isLoading } = api.recipe.authGetRecipes.useQuery({
+    filter,
+    sort,
+    pagination: {},
   });
 
   return (
@@ -26,19 +34,19 @@ const Home: NextPage = () => {
       </Head>
       <>
         <Filters
-          filters={filters}
+          filters={filter}
           sort={sort}
-          setFilter={setFilters}
+          setFilter={setFilter}
           setSort={setSort}
         />
         <div className="mx-auto max-w-7xl columns-3 space-y-4">
-          {/* {isLoading ? (
+          {isLoading ? (
             <Spinner />
           ) : (
             data?.map((recipe) => (
               <RecipePreviewCard recipe={recipe} key={recipe.id} />
             ))
-          )} */}
+          )}
         </div>
       </>
     </>
