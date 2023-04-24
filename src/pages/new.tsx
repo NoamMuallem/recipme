@@ -148,7 +148,11 @@ const CreateRecipe: React.FC = () => {
             {recipe.tags.map((_tag, index) => (
               <div key={index} className="mb-1">
                 <TagSelector
-                  onSelect={(value) => handleTagChange(index, { name: value })}
+                  onSelect={(value: string | string[]) => {
+                    if (!Array.isArray(value)) {
+                      handleTagChange(index, { name: value });
+                    }
+                  }}
                 />
               </div>
             ))}

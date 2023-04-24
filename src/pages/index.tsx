@@ -1,12 +1,24 @@
-import { Recipe } from "@prisma/client";
+// import { Recipe } from "@prisma/client";
+import { type Recipe } from "@prisma/client";
 import { type NextPage } from "next";
 import Head from "next/head";
+import { useState } from "react";
 import Filters from "y/components/filters";
-import Spinner from "y/components/spinner";
-import { api } from "y/utils/api";
+import { type Filter, type Sort } from "y/server/api/routers/recipes";
+// import Spinner from "y/components/spinner";
+// import { api } from "y/utils/api";
 
 const Home: NextPage = () => {
-  const { data, isLoading } = api.recipe.findTopRated.useQuery({});
+  const [sort, setSort] = useState<Sort>({
+    direction: "desc",
+    field: "createdAt",
+  });
+  const [filters, setFilters] = useState<Filter>({
+    ingredients: [],
+    rating: 0,
+    tags: [],
+    title: "",
+  });
 
   return (
     <>
@@ -16,15 +28,20 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <>
-        <Filters />
+        <Filters
+          filters={filters}
+          sort={sort}
+          setFilter={setFilters}
+          setSort={setSort}
+        />
         <div className="mx-auto max-w-7xl columns-3 space-y-4">
-          {isLoading ? (
+          {/* {isLoading ? (
             <Spinner />
           ) : (
             data?.map((recipe) => (
               <RecipePreviewCard recipe={recipe} key={recipe.id} />
             ))
-          )}
+          )} */}
         </div>
       </>
     </>
@@ -35,7 +52,7 @@ const RecipePreviewCard = ({ recipe }: { recipe: Recipe }) => {
   return (
     <div className="card glass h-fit w-[1/3] overflow-hidden rounded-md">
       <figure>
-        <img src={recipe.image} alt={recipe.title} class="object-center" />
+        <img src={recipe.image} alt={recipe.title} />
       </figure>
       <div className="card-body">
         <h2 className="card-title">{recipe.title}</h2>

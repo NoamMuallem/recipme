@@ -1,7 +1,33 @@
 import { protectedProcedure, publicProcedure } from "./../trpc";
 import { z } from "zod";
-
 import { createTRPCRouter } from "y/server/api/trpc";
+import { type Prisma } from "@prisma/client";
+
+export type Filter = {
+  ingredients?: string[];
+  tags?: string[];
+  title?: string;
+  rating?: number;
+  favoritesOnly?: boolean;
+};
+
+export const ZodFilter = {
+  ingredients: z.string().array(),
+  tags: z.string().array(),
+  title: z.string(),
+  rating: z.number(),
+  favoritesOnly: z.boolean().default(false),
+};
+
+export type Sort = {
+  direction?: "desc" | "asc";
+  field?: "title" | "createdAt" | "averageRating";
+};
+
+export const ZodSort = {
+  direction: z.enum(["asc", "desc"]),
+  field: z.enum(["title", "createdAt", "averageRating"]),
+};
 
 export type RecipeInput = {
   title: string;
@@ -75,84 +101,198 @@ export const recipeRouter = createTRPCRouter({
       });
     }),
 
-  findTopRated: publicProcedure
-    .input(z.object(paginationInputSchema))
-    .query(({ ctx, input }) => {
-      const { page, limit } = input;
-      const skip = (page - 1) * limit;
-      //Query 3
-      return ctx.prisma.recipe.findMany({
-        orderBy: {
-          averageRating: "desc",
-        },
-        take: limit,
-        skip,
-      });
-    }),
-
-  findRecentlyCreated: publicProcedure
-    .input(z.object(paginationInputSchema))
-    .query(({ ctx, input }) => {
-      const { page, limit } = input;
-      const skip = (page - 1) * limit;
-      //Query 4
-      return ctx.prisma.recipe.findMany({
-        orderBy: {
-          createdAt: "desc",
-        },
-        take: limit,
-        skip,
-      });
-    }),
-
-  findUserFavorites: protectedProcedure
-    .input(z.object(paginationInputSchema))
-    .query(async ({ ctx, input }) => {
-      const { page, limit } = input;
-      const userID = ctx.session.user.id;
-      const skip = (page - 1) * limit;
-      //Query 5
-      const favoriteRecipes = await ctx.prisma.favorite.findMany({
-        where: {
-          userID,
-        },
-        skip,
-        take: limit,
-        select: {
-          recipe: true,
-        },
-      });
-
-      return favoriteRecipes.map((favorite) => favorite.recipe);
-    }),
-
-  findByIngredients: publicProcedure
+  getRecipes: publicProcedure
     .input(
       z.object({
-        ...paginationInputSchema,
-        ingredientsNames: z.string().array(),
+        pagination: z.object(paginationInputSchema),
+        sort: z.object(ZodSort),
+        filter: z.object(ZodFilter),
       })
     )
     .query(({ ctx, input }) => {
-      const { page, limit, ingredientsNames } = input;
+      const {
+        pagination: { page, limit },
+        sort,
+        filter,
+      } = input;
       const skip = (page - 1) * limit;
-      //Query 6
+      const where = buildWhereFilter(filter);
+      const orderBy = buildOrderBy(sort);
+
       return ctx.prisma.recipe.findMany({
-        where: {
-          ingredients: {
-            some: {
-              ingredientName: {
-                name: {
-                  in: ingredientsNames,
-                },
-              },
+        where,
+        orderBy,
+        take: limit,
+        skip,
+        include: {
+          ingredients: true,
+          recipeTags: {
+            select: {
+              tag: true,
+            },
+          },
+          ratings: true,
+          user: true,
+        },
+      });
+    }),
+
+  authGetRecipes: protectedProcedure
+    .input(
+      z.object({
+        pagination: z.object(paginationInputSchema),
+        sort: z.object(ZodSort),
+        filter: z.object(ZodFilter),
+      })
+    )
+    .query(({ ctx, input }) => {
+      const {
+        pagination: { page, limit },
+        sort,
+        filter,
+      } = input;
+      const skip = (page - 1) * limit;
+      const where = buildWhereFilter(filter);
+      const orderBy = buildOrderBy(sort);
+      const userID = ctx.session.user.id;
+
+      //add favorites only to where if needed
+      if (filter.favoritesOnly) {
+        where.favoritedBy = {
+          some: {
+            userID,
+          },
+        };
+      }
+      return ctx.prisma.recipe.findMany({
+        where,
+        orderBy,
+        take: limit,
+        skip,
+        include: {
+          ingredients: true,
+          recipeTags: {
+            select: {
+              tag: true,
+            },
+          },
+          ratings: true,
+          user: true,
+          favoritedBy: {
+            where: {
+              userID,
             },
           },
         },
-        skip: skip,
-        take: limit,
       });
     }),
+
+  // findTopRated: publicProcedure
+  //   .input(z.object(paginationInputSchema))
+  //   .query(({ ctx, input }) => {
+  //     const { page, limit } = input;
+  //     const skip = (page - 1) * limit;
+  //     //Query 3
+  //     return ctx.prisma.recipe.findMany({
+  //       orderBy: {
+  //         averageRating: "desc",
+  //       },
+  //       take: limit,
+  //       skip,
+  //     });
+  //   }),
+
+  // findRecentlyCreated: publicProcedure
+  //   .input(z.object(paginationInputSchema))
+  //   .query(({ ctx, input }) => {
+  //     const { page, limit } = input;
+  //     const skip = (page - 1) * limit;
+  //     //Query 4
+  //     return ctx.prisma.recipe.findMany({
+  //       orderBy: {
+  //         createdAt: "desc",
+  //       },
+  //       take: limit,
+  //       skip,
+  //     });
+  //   }),
+
+  // findUserFavorites: protectedProcedure
+  //   .input(z.object(paginationInputSchema))
+  //   .query(async ({ ctx, input }) => {
+  //     const { page, limit } = input;
+  //     const userID = ctx.session.user.id;
+  //     const skip = (page - 1) * limit;
+  //     //Query 5
+  //     const favoriteRecipes = await ctx.prisma.favorite.findMany({
+  //       where: {
+  //         userID,
+  //       },
+  //       skip,
+  //       take: limit,
+  //       select: {
+  //         recipe: true,
+  //       },
+  //     });
+
+  //     return favoriteRecipes.map((favorite) => favorite.recipe);
+  //   }),
+
+  // findByTag: publicProcedure
+  //   .input(
+  //     z.object({
+  //       ...paginationInputSchema,
+  //       tagsNames: z.string().array(),
+  //     })
+  //   )
+  //   .query(({ ctx, input }) => {
+  //     const { page, limit, tagsNames } = input;
+  //     const skip = (page - 1) * limit;
+  //     //Query 6
+  //     return ctx.prisma.recipe.findMany({
+  //       where: {
+  //         recipeTags: {
+  //           some: {
+  //             tag: {
+  //               name: {
+  //                 in: tagsNames,
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //       skip: skip,
+  //       take: limit,
+  //     });
+  //   }),
+
+  // findByIngredients: publicProcedure
+  //   .input(
+  //     z.object({
+  //       ...paginationInputSchema,
+  //       ingredientsNames: z.string().array(),
+  //     })
+  //   )
+  //   .query(({ ctx, input }) => {
+  //     const { page, limit, ingredientsNames } = input;
+  //     const skip = (page - 1) * limit;
+  //     //Query 6
+  //     return ctx.prisma.recipe.findMany({
+  //       where: {
+  //         ingredients: {
+  //           some: {
+  //             ingredientName: {
+  //               name: {
+  //                 in: ingredientsNames,
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //       skip: skip,
+  //       take: limit,
+  //     });
+  //   }),
 
   createRecipe: protectedProcedure
     .input(ZodRecipeInput)
@@ -358,3 +498,62 @@ export const recipeRouter = createTRPCRouter({
       });
     }),
 });
+
+const buildWhereFilter = (filter: Filter) => {
+  const where: Prisma.RecipeWhereInput = {};
+
+  if (filter?.ingredients) {
+    where.ingredients = {
+      some: {
+        ingredientName: {
+          name: {
+            in: filter.ingredients,
+          },
+        },
+      },
+    };
+  }
+
+  if (filter.tags) {
+    where.recipeTags = {
+      some: {
+        tag: {
+          name: {
+            in: filter.tags,
+          },
+        },
+      },
+    };
+  }
+
+  if (filter.title) {
+    where.title = {
+      contains: filter.title,
+      mode: "insensitive",
+    };
+  }
+
+  if (filter.rating) {
+    where.averageRating = {
+      gte: filter.rating,
+    };
+  }
+
+  return where;
+};
+
+const buildOrderBy = (sort: Sort) => {
+  const orderBy: Prisma.RecipeOrderByWithAggregationInput = {};
+
+  if (sort) {
+    if (sort.field === "title") {
+      orderBy.title = sort.direction;
+    } else if (sort.field === "createdAt") {
+      orderBy.createdAt = sort.direction;
+    } else if (sort.field === "averageRating") {
+      orderBy.averageRating = sort.direction;
+    }
+  }
+
+  return orderBy;
+};
