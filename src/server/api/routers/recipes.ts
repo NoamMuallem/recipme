@@ -170,7 +170,11 @@ export const recipeRouter = createTRPCRouter({
         take: limit,
         skip,
         include: {
-          ingredients: true,
+          ingredients: {
+            select: {
+              ingredientName: true,
+            },
+          },
           recipeTags: {
             select: {
               tag: true,
