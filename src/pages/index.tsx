@@ -17,7 +17,7 @@ const Home: NextPage = () => {
       </Head>
       <>
         <Filters />
-        <div className="align-center flex flex-1 flex-col justify-center">
+        <div className="mx-auto max-w-7xl columns-3 space-y-4">
           {isLoading ? (
             <Spinner />
           ) : (
@@ -33,16 +33,13 @@ const Home: NextPage = () => {
 
 const RecipePreviewCard = ({ recipe }: { recipe: Recipe }) => {
   return (
-    <div className="card glass w-96">
-      <figure className="h-[250px]">
-        <img src={recipe.image} alt={recipe.title} className="w-full" />
+    <div className="card glass h-fit w-[1/3] overflow-hidden rounded-md">
+      <figure>
+        <img src={recipe.image} alt={recipe.title} class="object-center" />
       </figure>
       <div className="card-body">
         <h2 className="card-title">{recipe.title}</h2>
         <p>{recipe.description}</p>
-        <div className="card-actions justify-end">
-          <button className="btn-primary btn">Open</button>
-        </div>
       </div>
     </div>
   );
