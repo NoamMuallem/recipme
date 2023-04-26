@@ -6,6 +6,7 @@ import Filters from "y/components/filters";
 import Spinner from "y/components/spinner";
 import { type Filter, type Sort } from "y/server/api/routers/recipes";
 import { api } from "y/utils/api";
+import { useRouter } from "next/router";
 
 const Home: NextPage = () => {
   const [sort, setSort] = useState<Sort>({
@@ -54,8 +55,19 @@ const Home: NextPage = () => {
 };
 
 const RecipePreviewCard = ({ recipe }: { recipe: Recipe }) => {
+  const router = useRouter();
+
+  const goToRecipePage = () => {
+    router
+      .push(`/recipes/${recipe.id}`)
+      .catch((error) => console.error("redirect error", error));
+  };
+
   return (
-    <div className="card glass h-fit w-[1/3] overflow-hidden rounded-md">
+    <div
+      onClick={goToRecipePage}
+      className="card glass h-fit w-[1/3] overflow-hidden rounded-md"
+    >
       <figure>
         <img src={recipe.image} alt={recipe.title} />
       </figure>

@@ -89,14 +89,23 @@ export const recipeRouter = createTRPCRouter({
   getOne: publicProcedure
     .input(
       z.object({
-        id: z.string(),
+        recipeID: z.string().nullish(),
       })
     )
     .query(({ ctx, input }) => {
       //Query 2
+      if (!input.recipeID) return;
       return ctx.prisma.recipe.findUnique({
         where: {
-          id: input.id,
+          id: input.recipeID,
+        },
+        include: {
+          ingredients: {
+            select: {
+              ingredientName: true,
+              amount: true,
+            },
+          },
         },
       });
     }),
@@ -190,113 +199,6 @@ export const recipeRouter = createTRPCRouter({
         },
       });
     }),
-
-  // findTopRated: publicProcedure
-  //   .input(z.object(paginationInputSchema))
-  //   .query(({ ctx, input }) => {
-  //     const { page, limit } = input;
-  //     const skip = (page - 1) * limit;
-  //     //Query 3
-  //     return ctx.prisma.recipe.findMany({
-  //       orderBy: {
-  //         averageRating: "desc",
-  //       },
-  //       take: limit,
-  //       skip,
-  //     });
-  //   }),
-
-  // findRecentlyCreated: publicProcedure
-  //   .input(z.object(paginationInputSchema))
-  //   .query(({ ctx, input }) => {
-  //     const { page, limit } = input;
-  //     const skip = (page - 1) * limit;
-  //     //Query 4
-  //     return ctx.prisma.recipe.findMany({
-  //       orderBy: {
-  //         createdAt: "desc",
-  //       },
-  //       take: limit,
-  //       skip,
-  //     });
-  //   }),
-
-  // findUserFavorites: protectedProcedure
-  //   .input(z.object(paginationInputSchema))
-  //   .query(async ({ ctx, input }) => {
-  //     const { page, limit } = input;
-  //     const userID = ctx.session.user.id;
-  //     const skip = (page - 1) * limit;
-  //     //Query 5
-  //     const favoriteRecipes = await ctx.prisma.favorite.findMany({
-  //       where: {
-  //         userID,
-  //       },
-  //       skip,
-  //       take: limit,
-  //       select: {
-  //         recipe: true,
-  //       },
-  //     });
-
-  //     return favoriteRecipes.map((favorite) => favorite.recipe);
-  //   }),
-
-  // findByTag: publicProcedure
-  //   .input(
-  //     z.object({
-  //       ...paginationInputSchema,
-  //       tagsNames: z.string().array(),
-  //     })
-  //   )
-  //   .query(({ ctx, input }) => {
-  //     const { page, limit, tagsNames } = input;
-  //     const skip = (page - 1) * limit;
-  //     //Query 6
-  //     return ctx.prisma.recipe.findMany({
-  //       where: {
-  //         recipeTags: {
-  //           some: {
-  //             tag: {
-  //               name: {
-  //                 in: tagsNames,
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       skip: skip,
-  //       take: limit,
-  //     });
-  //   }),
-
-  // findByIngredients: publicProcedure
-  //   .input(
-  //     z.object({
-  //       ...paginationInputSchema,
-  //       ingredientsNames: z.string().array(),
-  //     })
-  //   )
-  //   .query(({ ctx, input }) => {
-  //     const { page, limit, ingredientsNames } = input;
-  //     const skip = (page - 1) * limit;
-  //     //Query 6
-  //     return ctx.prisma.recipe.findMany({
-  //       where: {
-  //         ingredients: {
-  //           some: {
-  //             ingredientName: {
-  //               name: {
-  //                 in: ingredientsNames,
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       skip: skip,
-  //       take: limit,
-  //     });
-  //   }),
 
   createRecipe: protectedProcedure
     .input(ZodRecipeInput)
