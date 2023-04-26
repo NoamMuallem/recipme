@@ -1,7 +1,8 @@
 import React from "react";
-import { Filter, Sort } from "y/server/api/routers/recipes";
+import { type Filter, type Sort } from "y/server/api/routers/recipes";
 import TagSelector from "./tagSelector";
 import { IngredientNameAutocomplete } from "./ingredientsSelector";
+import { useSession } from "next-auth/react";
 
 const Filters = ({
   sort,
@@ -14,6 +15,8 @@ const Filters = ({
   setSort: (sort: Sort) => void;
   setFilter: (filter: Filter) => void;
 }) => {
+  const { data: sessionData } = useSession();
+
   return (
     <div className="my-5 flex w-full flex-wrap justify-evenly rounded-md bg-accent-content bg-opacity-30 py-2 backdrop-blur-lg">
       <div className="flex items-center">
@@ -86,17 +89,19 @@ const Filters = ({
           <option value="desc">Descending</option>
         </select>
       </div>
-      <label className="form-control label flex cursor-pointer flex-row items-center gap-2">
-        <span className="label-text">favorites</span>
-        <input
-          type="checkbox"
-          checked={filters.favoritesOnly}
-          onChange={(e) =>
-            setFilter({ ...filters, favoritesOnly: e.target.checked })
-          }
-          className="checkbox-info checkbox"
-        />
-      </label>
+      {sessionData?.user && (
+        <label className="form-control label flex cursor-pointer flex-row items-center gap-2">
+          <span className="label-text">favorites</span>
+          <input
+            type="checkbox"
+            checked={filters.favoritesOnly}
+            onChange={(e) =>
+              setFilter({ ...filters, favoritesOnly: e.target.checked })
+            }
+            className="checkbox-info checkbox"
+          />
+        </label>
+      )}
       <TagSelector
         isMulti
         onSelect={(values: string | string[]) => {
