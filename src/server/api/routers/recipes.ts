@@ -9,6 +9,7 @@ export type Filter = {
   title?: string;
   rating?: number;
   favoritesOnly?: boolean;
+  myRecipes?: boolean;
 };
 
 export const ZodFilter = {
@@ -17,6 +18,7 @@ export const ZodFilter = {
   title: z.string().optional(),
   rating: z.number().optional(),
   favoritesOnly: z.boolean().default(false),
+  myRecipes: z.boolean().default(false),
 };
 
 export type Sort = {
@@ -165,7 +167,7 @@ export const recipeRouter = createTRPCRouter({
       const orderBy = buildOrderBy(sort);
       const userID = ctx.session.user.id;
 
-      //add favorites only to where if needed
+      //authenticated users only properties
       if (filter.favoritesOnly) {
         where.favoritedBy = {
           some: {
@@ -173,6 +175,11 @@ export const recipeRouter = createTRPCRouter({
           },
         };
       }
+
+      if (filter.myRecipes) {
+        where.userId = userID;
+      }
+
       return ctx.prisma.recipe.findMany({
         where,
         orderBy,

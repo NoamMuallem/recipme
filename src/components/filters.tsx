@@ -90,17 +90,30 @@ const Filters = ({
         </select>
       </div>
       {sessionData?.user && (
-        <label className="form-control label flex cursor-pointer flex-row items-center gap-2">
-          <span className="label-text">favorites</span>
-          <input
-            type="checkbox"
-            checked={filters.favoritesOnly}
-            onChange={(e) =>
-              setFilter({ ...filters, favoritesOnly: e.target.checked })
-            }
-            className="checkbox-info checkbox"
-          />
-        </label>
+        <>
+          <label className="form-control label flex cursor-pointer flex-row items-center gap-2">
+            <span className="label-text">favorites</span>
+            <input
+              type="checkbox"
+              checked={filters.favoritesOnly}
+              onChange={(e) =>
+                setFilter({ ...filters, favoritesOnly: e.target.checked })
+              }
+              className="checkbox-info checkbox"
+            />
+          </label>
+          <label className="form-control label flex cursor-pointer flex-row items-center gap-2">
+            <span className="label-text">my recipes</span>
+            <input
+              type="checkbox"
+              checked={filters.myRecipes}
+              onChange={(e) =>
+                setFilter({ ...filters, myRecipes: e.target.checked })
+              }
+              className="checkbox-info checkbox"
+            />
+          </label>
+        </>
       )}
       <TagSelector
         isMulti
