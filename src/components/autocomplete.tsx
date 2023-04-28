@@ -1,88 +1,115 @@
-import React, { useState } from "react";
-
-type Option = {
-  value: string;
-  label: string;
-};
+import { useMemo, useState } from "react";
+import Spinner from "./spinner";
 
 interface AutocompleteProps {
-  options: Option[];
-  placeholder?: string;
-  onSelect: (selectedOptions: Option[]) => void;
+  onSelect: (name: string | string[]) => void;
+  isMulti?: boolean;
+  freeSolo?: boolean;
+  inputValue: string;
+  setInputValue: (value: string) => void;
+  options: string[];
+  isOptionsLoading?: boolean;
 }
 
-const Autocomplete: React.FC<AutocompleteProps> = ({
-  options,
-  placeholder,
+export const Autocomplete = ({
   onSelect,
-}) => {
-  const [inputValue, setInputValue] = useState("");
-  const [selectedOptions, setSelectedOptions] = useState<Option[]>([]);
-  const [suggestions, setSuggestions] = useState<Option[]>([]);
+  inputValue,
+  setInputValue,
+  options,
+  isOptionsLoading,
+  isMulti = false,
+  freeSolo = false,
+}: AutocompleteProps) => {
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-
-    if (e.target.value) {
-      const filteredSuggestions = options.filter((option) =>
-        option.label.toLowerCase().includes(e.target.value.toLowerCase())
-      );
-      setSuggestions(filteredSuggestions);
+  const handleSelect = (value: string) => {
+    if (isMulti) {
+      setInputValue("");
+      const newSelectedValues = new Set(selectedItems);
+      newSelectedValues.add(value);
+      setSelectedItems([...newSelectedValues]);
+      onSelect(Array.from(newSelectedValues));
     } else {
-      setSuggestions([]);
+      setSelectedItems([value]);
+      setInputValue(value);
+      onSelect(value);
     }
   };
 
-  const onOptionClick = (option: Option) => {
-    setSelectedOptions((prevSelected) => [...prevSelected, option]);
-    setSuggestions([]);
-    setInputValue("");
-    onSelect([...selectedOptions, option]);
+  const handleRemoveItem = (value: string) => {
+    const newSelectedValues = new Set(selectedItems);
+    newSelectedValues.delete(value);
+    setSelectedItems([...newSelectedValues]);
+    onSelect(Array.from(newSelectedValues));
   };
 
-  const onRemoveOption = (option: Option) => {
-    const newSelectedOptions = selectedOptions.filter(
-      (selectedOption) => selectedOption.value !== option.value
-    );
-    setSelectedOptions(newSelectedOptions);
-    onSelect(newSelectedOptions);
-  };
+  const relevantOptions = useMemo(() => {
+    return options.filter((option) => !selectedItems.includes(option));
+  }, [options, selectedItems]);
 
   return (
-    <div className="relative">
-      <div className="flex flex-wrap">
-        {selectedOptions.map((option) => (
-          <span
-            key={option.value}
-            className="badge-info badge m-1"
-            onClick={() => onRemoveOption(option)}
-          >
-            {option.label}
-          </span>
-        ))}
-      </div>
-      <input
-        type="text"
-        className="input-bordered input w-full"
-        placeholder={placeholder || "Type to search..."}
-        value={inputValue}
-        onChange={onInputChange}
-      />
-      {suggestions.length > 0 && (
-        <ul className="absolute z-10 mt-1 w-full rounded-md border border-gray-300 bg-white p-2 text-gray-700 shadow">
-          {suggestions.map((suggestion) => (
-            <li
-              key={suggestion.value}
-              className="cursor-pointer p-1 hover:bg-gray-200"
-              onClick={() => onOptionClick(suggestion)}
+    <div className="flex flex-col">
+      {isMulti && (
+        <div className="flex flex-wrap">
+          {selectedItems.map((item, index) => (
+            <div
+              key={index}
+              className="mr-2 mb-2 flex items-center rounded bg-gray-200 px-2 py-1 text-sm"
             >
-              {suggestion.label}
-            </li>
+              <span>{item}</span>
+              <button
+                className="ml-2 text-xs font-bold text-gray-600 hover:text-red-600"
+                onClick={() => handleRemoveItem(item)}
+              >
+                &times;
+              </button>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
+      <div className={`${isMulti ? "mt-2" : ""} flex`}>
+        <div className="relative">
+          <input
+            type="text"
+            className="input-bordered input w-full"
+            placeholder="Search"
+            value={inputValue}
+            onChange={(e) => {
+              const value = e.target.value;
+              //remove option if the input does not match
+              if (!isMulti && !options.includes(value)) {
+                setSelectedItems([]);
+              }
+              setInputValue(value);
+              if (freeSolo && value.length > 0 && !options.includes(value)) {
+                onSelect(value);
+              }
+            }}
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+          />
+          {showSuggestions && relevantOptions.length > 0 && (
+            <div className="z-100 absolute left-0 z-10 mt-1 w-full rounded-md border border-gray-300 bg-white shadow-lg">
+              <ul className="max-h-48 overflow-auto">
+                {isOptionsLoading ? (
+                  <Spinner />
+                ) : (
+                  relevantOptions.map((suggestion, index) => (
+                    <li
+                      key={index}
+                      className="cursor-pointer px-3 py-2 hover:bg-gray-200"
+                      onClick={() => handleSelect(suggestion)}
+                    >
+                      {suggestion}
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
-
-export default Autocomplete;

@@ -24,7 +24,7 @@ const CreateRecipe: React.FC = () => {
     try {
       const newRecipe = mutate(recipe);
       console.log("New recipe created:", newRecipe);
-      push("/");
+      // push("/");
     } catch (error) {
       console.error("Failed to create recipe:", error);
     }
@@ -160,6 +160,8 @@ const CreateRecipe: React.FC = () => {
             {recipe.tags.map((_tag, index) => (
               <div key={index} className="mb-1">
                 <TagSelector
+                  isMulti
+                  freeSolo
                   onSelect={(value: string | string[]) => {
                     if (!Array.isArray(value)) {
                       handleTagChange(index, { name: value });

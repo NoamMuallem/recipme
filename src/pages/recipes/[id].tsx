@@ -48,6 +48,14 @@ const Recipe = () => {
                 </li>
               ))}
             </ul>
+            <h2 className="mb-4 text-2xl font-semibold">Tags</h2>
+            <ul className="list-inside list-disc space-y-2">
+              {data.recipeTags.map((tag) => (
+                <li key={tag.tagID} className="text-gray-700">
+                  {tag.tag.name}
+                </li>
+              ))}
+            </ul>
             <h2 className="mt-6 mb-4 text-2xl font-semibold">Directions</h2>
             <p className="whitespace-pre-line text-gray-700">
               {data.directions}

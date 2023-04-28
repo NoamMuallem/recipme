@@ -124,6 +124,7 @@ const Filters = ({
         }}
       />
       <IngredientNameAutocomplete
+        isMulti
         onSelect={(value: string | string[]) => {
           if (Array.isArray(value)) {
             setFilter({ ...filters, ingredients: value });
