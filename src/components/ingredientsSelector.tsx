@@ -104,7 +104,7 @@ export const IngredientNameAutocomplete = ({
               }
               setInputValue(value);
               if (freeSolo && value.length > 0 && !options.includes(value)) {
-                onSelect(inputValue);
+                onSelect(value);
               }
             }}
             onFocus={() => setShowSuggestions(true)}
