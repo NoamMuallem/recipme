@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
-import Spinner from "./spinner";
+import React, { useState, useEffect } from "react";
 import { type Tag } from "@prisma/client";
 import { api } from "y/utils/api";
 import { useDebounce } from "use-debounce";
@@ -21,7 +20,7 @@ const AsyncSelect = ({
   const [debouncedInputValue] = useDebounce(inputValue, 500);
 
   const { data: tagsOptions, isLoading: isTagsOptionsLoading } =
-    api.ingredients.suggestIngredients.useQuery({
+    api.tags.suggestsTags.useQuery({
       text: debouncedInputValue,
     });
 
