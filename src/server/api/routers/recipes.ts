@@ -2,6 +2,7 @@ import { protectedProcedure, publicProcedure } from "./../trpc";
 import { z } from "zod";
 import { createTRPCRouter } from "y/server/api/trpc";
 import { type Prisma } from "@prisma/client";
+import { Units } from "y/index.d";
 
 export type Filter = {
   ingredients?: string[];
@@ -36,6 +37,7 @@ export type RecipeInput = {
   ingredients: {
     amount: number;
     name: string;
+    unit: Units;
   }[];
   description: string;
   yield: number;
@@ -54,6 +56,9 @@ export const ZodRecipeInput = z.object({
   ingredients: z
     .object({
       amount: z.number({
+        required_error: "amount of ingredient must be provided",
+      }),
+      unit: z.nativeEnum(Units, {
         required_error: "amount of ingredient must be provided",
       }),
       name: z
@@ -235,6 +240,7 @@ export const recipeRouter = createTRPCRouter({
           ingredients: {
             create: ingredients.map((ingredient) => ({
               amount: ingredient.amount,
+              unit: ingredient.unit as Units,
               ingredientName: {
                 connectOrCreate: {
                   create: { name: ingredient.name, count: 1 },
@@ -256,6 +262,9 @@ export const recipeRouter = createTRPCRouter({
           .object({
             amount: z.number({}),
             name: z.string().min(3).max(15),
+            unit: z.nativeEnum(Units, {
+              required_error: "amount of ingredient must be provided",
+            }),
           })
           .array(),
         description: z.string(),
@@ -343,6 +352,7 @@ export const recipeRouter = createTRPCRouter({
             })),
             create: addedIngredients.map((ingredient) => ({
               amount: ingredient.amount,
+              unit: ingredient.unit as Units,
               ingredientName: {
                 connectOrCreate: {
                   create: { name: ingredient.name, count: 1 },

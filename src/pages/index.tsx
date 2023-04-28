@@ -26,6 +26,8 @@ const Home: NextPage = () => {
     pagination: {},
   });
 
+  console.log({ data });
+
   return (
     <>
       <Head>

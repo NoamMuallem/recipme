@@ -86,6 +86,7 @@ model Ingredient {
   id               String          @id @default(cuid())
   ingredientName   IngredientsName @relation(fields: [ingredientNameId], references: [id])
   ingredientNameId String
+  unit             String
   amount           Float
   recipeID         String
   recipe           Recipe          @relation(fields: [recipeID], references: [id])
