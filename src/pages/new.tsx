@@ -24,7 +24,7 @@ const CreateRecipe: React.FC = () => {
     try {
       const newRecipe = mutate(recipe);
       console.log("New recipe created:", newRecipe);
-      // push("/");
+      push("/");
     } catch (error) {
       console.error("Failed to create recipe:", error);
     }
