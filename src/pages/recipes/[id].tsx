@@ -32,7 +32,6 @@ const Recipe = () => {
             <p className="mt-4 text-lg text-gray-700">{data.description}</p>
           </div>
           <div>
-            <h2 className="mb-4 text-2xl font-semibold">{`Rating: ${data.averageRating}`}</h2>
             <h2 className="mb-4 text-2xl font-semibold">Ingredients</h2>
             <ul className="list-inside list-disc space-y-2">
               {data.ingredients.map((ingredient) => (
