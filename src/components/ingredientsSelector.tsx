@@ -24,7 +24,7 @@ export const IngredientNameAutocomplete = ({
   const { data: ingredientsOptions, isLoading: isIngredientsOptionsLoading } =
     api.ingredients.suggestIngredients.useQuery(
       {
-        text: debouncedInputValue,
+        searchString: debouncedInputValue,
       },
       {
         enabled:

@@ -21,7 +21,7 @@ const AsyncSelect = ({
 
   const { data: tagsOptions, isLoading: isTagsOptionsLoading } =
     api.tags.suggestsTags.useQuery({
-      text: debouncedInputValue,
+      searchString: debouncedInputValue,
     });
 
   useEffect(() => {
