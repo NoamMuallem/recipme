@@ -1,35 +1,18 @@
-import { protectedProcedure, publicProcedure } from "./../trpc";
-import { z } from "zod";
-import { createTRPCRouter } from "y/server/api/trpc";
-import { type Prisma } from "@prisma/client";
 import { Units } from "y/index.d";
+import { createTRPCRouter } from "y/server/api/trpc";
+import { z } from "zod";
+import { protectedProcedure, publicProcedure } from "./../trpc";
 
 export type Filter = {
-  ingredients?: string[];
-  tags?: string[];
-  title?: string;
-  rating?: number;
-  favoritesOnly?: boolean;
-  myRecipes?: boolean;
+  ingredientNames?: string[];
+  tagNames?: string[];
+  titleSubstring?: string;
 };
 
 export const ZodFilter = {
-  ingredients: z.string().array().optional(),
-  tags: z.string().array().optional(),
-  title: z.string().optional(),
-  rating: z.number().optional(),
-  favoritesOnly: z.boolean().default(false),
-  myRecipes: z.boolean().default(false),
-};
-
-export type Sort = {
-  direction: "desc" | "asc";
-  field: "title" | "createdAt" | "averageRating";
-};
-
-export const ZodSort = {
-  direction: z.enum(["asc", "desc"]),
-  field: z.enum(["title", "createdAt", "averageRating"]),
+  ingredientNames: z.string().array().optional(),
+  tagNames: z.string().array().optional(),
+  titleSubstring: z.string().optional(),
 };
 
 export type RecipeInput = {
@@ -40,7 +23,7 @@ export type RecipeInput = {
     unit: Units;
   }[];
   description: string;
-  yield: number;
+  yieldValue: number;
   directions: string;
   image: string;
   tags: {
@@ -68,7 +51,7 @@ export const ZodRecipeInput = z.object({
     })
     .array(),
   description: z.string(),
-  yield: z.number(),
+  yieldValue: z.number(),
   directions: z.string(),
   image: z.string(),
   tags: z
@@ -84,15 +67,6 @@ const paginationInputSchema = {
 };
 
 export const recipeRouter = createTRPCRouter({
-  getAllMy: publicProcedure.query(({ ctx }) => {
-    //Query 1
-    return ctx.prisma.recipe.findMany({
-      where: {
-        userId: ctx.session?.user.id,
-      },
-    });
-  }),
-
   getOne: publicProcedure
     .input(
       z.object({
@@ -123,97 +97,34 @@ export const recipeRouter = createTRPCRouter({
       });
     }),
 
-  getRecipes: publicProcedure
+  getRecipes: protectedProcedure
     .input(
       z.object({
         pagination: z.object(paginationInputSchema),
-        sort: z.object(ZodSort),
         filter: z.object(ZodFilter),
       })
     )
     .query(({ ctx, input }) => {
-      const {
-        pagination: { page, limit },
-        sort,
-        filter,
-      } = input;
-      const skip = (page - 1) * limit;
-      const where = buildWhereFilter(filter);
-      const orderBy = buildOrderBy(sort);
+      const { titleSubstring, ingredientNames, tagNames } = input.filter;
+      const userId = ctx.session.user.id;
 
       return ctx.prisma.recipe.findMany({
-        where,
-        orderBy,
-        take: limit,
-        skip,
+        where: {
+          userId,
+          title: titleSubstring ? { contains: titleSubstring } : undefined,
+          ingredients: ingredientNames
+            ? { every: { ingredientName: { name: { in: ingredientNames } } } }
+            : undefined,
+          recipeTags: tagNames
+            ? { every: { tag: { name: { in: tagNames } } } }
+            : undefined,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
         include: {
           ingredients: true,
-          recipeTags: {
-            select: {
-              tag: true,
-            },
-          },
-          ratings: true,
-          user: true,
-        },
-      });
-    }),
-
-  authGetRecipes: protectedProcedure
-    .input(
-      z.object({
-        pagination: z.object(paginationInputSchema),
-        sort: z.object(ZodSort),
-        filter: z.object(ZodFilter),
-      })
-    )
-    .query(({ ctx, input }) => {
-      const {
-        pagination: { page, limit },
-        sort,
-        filter,
-      } = input;
-      const skip = (page - 1) * limit;
-      const where = buildWhereFilter(filter);
-      const orderBy = buildOrderBy(sort);
-      const userID = ctx.session.user.id;
-
-      //authenticated users only properties
-      if (filter.favoritesOnly) {
-        where.favoritedBy = {
-          some: {
-            userID,
-          },
-        };
-      }
-
-      if (filter.myRecipes) {
-        where.userId = userID;
-      }
-
-      return ctx.prisma.recipe.findMany({
-        where,
-        orderBy,
-        take: limit,
-        skip,
-        include: {
-          ingredients: {
-            select: {
-              ingredientName: true,
-            },
-          },
-          recipeTags: {
-            select: {
-              tag: true,
-            },
-          },
-          ratings: true,
-          user: true,
-          favoritedBy: {
-            where: {
-              userID,
-            },
-          },
+          recipeTags: { include: { tag: true } },
         },
       });
     }),
@@ -221,38 +132,54 @@ export const recipeRouter = createTRPCRouter({
   createRecipe: protectedProcedure
     .input(ZodRecipeInput)
     .mutation(async ({ ctx, input }) => {
-      const { tags, ingredients, ...rest } = input;
+      const {
+        tags,
+        ingredients,
+        title,
+        description,
+        yieldValue,
+        directions,
+        image,
+      } = input;
       const userID = ctx.session.user.id;
 
       //Query 7
       return await ctx.prisma.recipe.create({
         data: {
-          ...rest,
-          user: {
-            connect: {
-              id: userID,
-            },
-          },
+          title,
+          description,
+          yield: yieldValue,
+          directions,
+          image,
+          user: { connect: { id: userID } },
           recipeTags: {
-            create: tags.map(({ name }) => ({
+            create: tags.map((tag) => ({
               tag: {
                 connectOrCreate: {
-                  create: { name, count: 1 },
-                  where: { name },
+                  create: {
+                    name: tag.name,
+                    count: 1,
+                    user: { connect: { id: userID } },
+                  },
+                  where: { name: tag.name },
                 },
               },
             })),
           },
           ingredients: {
             create: ingredients.map((ingredient) => ({
-              amount: ingredient.amount,
-              unit: ingredient.unit as Units,
               ingredientName: {
                 connectOrCreate: {
-                  create: { name: ingredient.name, count: 1 },
+                  create: {
+                    name: ingredient.name,
+                    count: 1,
+                    user: { connect: { id: userID } },
+                  },
                   where: { name: ingredient.name },
                 },
               },
+              unit: ingredient.unit,
+              amount: ingredient.amount,
             })),
           },
         },
@@ -274,7 +201,7 @@ export const recipeRouter = createTRPCRouter({
           })
           .array(),
         description: z.string(),
-        yield: z.number(),
+        yieldValue: z.number(),
         directions: z.string(),
         image: z.string(),
         tags: z
@@ -285,86 +212,56 @@ export const recipeRouter = createTRPCRouter({
       }) satisfies z.ZodType<RecipeInput>
     )
     .mutation(async ({ ctx, input }) => {
-      const { tags, ingredients, id, ...rest } = input;
+      const {
+        tags,
+        ingredients,
+        id,
+        title,
+        description,
+        directions,
+        yieldValue,
+        image,
+      } = input;
+      const userID = ctx.session.user.id;
 
-      // Query 8
-      const currentRecipe = await ctx.prisma.recipe.findUnique({
-        where: { id },
-        include: {
-          recipeTags: {
-            select: {
-              tag: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-            },
-          },
-          ingredients: {
-            select: {
-              ingredientName: true,
-              ingredientNameId: true,
-            },
-          },
-        },
-      });
-
-      if (!currentRecipe) throw new Error("Recipe not found");
-
-      const currentTags = currentRecipe.recipeTags.map(
-        (recipeTag) => recipeTag.tag.name
-      );
-      const currentIngredients = currentRecipe.ingredients.map(
-        (ingredient) => ingredient.ingredientNameId
-      );
-
-      // Find added and removed tags
-      const addedTags = tags.filter(({ name }) => !currentTags.includes(name));
-      const removedTags = currentTags.filter(
-        (tagID) => !tags.map(({ name }) => name).includes(tagID)
-      );
-
-      // Find added and removed ingredients
-      const addedIngredients = ingredients.filter(
-        (ingredient) => !currentIngredients.includes(ingredient.name)
-      );
-      const removedIngredients = currentIngredients.filter(
-        (ingredientID) =>
-          !ingredients
-            .map((ingredient) => ingredient.name)
-            .includes(ingredientID)
-      );
-
-      // Query 9
-      return await ctx.prisma.recipe.update({
+      return ctx.prisma.recipe.update({
         where: { id },
         data: {
-          ...rest,
+          title,
+          description,
+          yield: yieldValue,
+          directions,
+          image,
           recipeTags: {
-            deleteMany: removedTags.map((tagID) => ({ tagID })),
-            create: addedTags.map(({ name }) => ({
+            deleteMany: {},
+            create: tags.map((tag) => ({
               tag: {
                 connectOrCreate: {
-                  create: { name, count: 1 },
-                  where: { name },
+                  create: {
+                    name: tag.name,
+                    count: 1,
+                    user: { connect: { id: userID } },
+                  },
+                  where: { name: tag.name },
                 },
               },
             })),
           },
           ingredients: {
-            deleteMany: removedIngredients.map((ingredientNameId) => ({
-              ingredientNameId,
-            })),
-            create: addedIngredients.map((ingredient) => ({
-              amount: ingredient.amount,
-              unit: ingredient.unit as Units,
+            deleteMany: {},
+            create: ingredients.map((ingredient) => ({
               ingredientName: {
                 connectOrCreate: {
-                  create: { name: ingredient.name, count: 1 },
+                  create: {
+                    name: ingredient.name,
+                    count: 1,
+                    user: { connect: { id: userID } },
+                  },
                   where: { name: ingredient.name },
                 },
               },
+              unit: ingredient.unit,
+              amount: ingredient.amount,
             })),
           },
         },
@@ -379,110 +276,49 @@ export const recipeRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { id } = input;
-      // Query 10
-      const recipeToDelete = await ctx.prisma.recipe.findUnique({
+      const userID = ctx.session.user.id;
+      const recipe = await ctx.prisma.recipe.findUnique({
         where: { id },
         include: {
-          recipeTags: {
-            select: {
-              tag: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-            },
-          },
           ingredients: {
-            select: {
+            include: {
               ingredientName: true,
-              ingredientNameId: true,
             },
           },
+          recipeTags: { include: { tag: true } },
         },
       });
 
-      if (!recipeToDelete) throw new Error("Recipe not found");
+      if (!recipe || recipe.userId !== userID) {
+        throw new Error("Recipe not found or unauthorized access");
+      }
 
-      await Promise.all([
-        // Query 11
-        ...recipeToDelete.recipeTags.map((tag) =>
-          ctx.prisma.tag.update({
-            where: { id: tag.tag.id },
-            data: { count: { decrement: 1 } },
-          })
-        ),
-        // Query 12
-        ...recipeToDelete.ingredients.map((ingredient) =>
-          ctx.prisma.ingredientsName.update({
-            where: { id: ingredient.ingredientNameId },
-            data: { count: { decrement: 1 } },
-          })
-        ),
-      ]);
-
-      // Query 13
-      return await ctx.prisma.recipe.delete({
-        where: { id },
+      // Prepare update operations for tags count
+      const updateTagsCount = recipe.recipeTags.map((recipeTag) => {
+        const updatedTagCount = recipeTag.tag.count - 1;
+        return ctx.prisma.tag.update({
+          where: { id: recipeTag.tagID },
+          data: { count: updatedTagCount },
+        });
       });
+
+      // Prepare update operations for ingredients count
+      const updateIngredientsCount = recipe.ingredients.map((ingredient) => {
+        const updatedIngredientCount = ingredient.ingredientName.count - 1;
+        return ctx.prisma.ingredientsName.update({
+          where: { id: ingredient.ingredientNameId },
+          data: { count: updatedIngredientCount },
+        });
+      });
+
+      // Prepare delete operation for the recipe
+      const deleteRecipeOperation = ctx.prisma.recipe.delete({ where: { id } });
+
+      // Perform all operations within a transaction
+      await ctx.prisma.$transaction([
+        ...updateTagsCount,
+        ...updateIngredientsCount,
+        deleteRecipeOperation,
+      ]);
     }),
 });
-
-const buildWhereFilter = (filter: Filter) => {
-  const where: Prisma.RecipeWhereInput = {};
-
-  if (filter?.ingredients && filter.ingredients.length > 0) {
-    where.ingredients = {
-      some: {
-        ingredientName: {
-          name: {
-            in: filter.ingredients,
-          },
-        },
-      },
-    };
-  }
-
-  if (filter?.tags && filter.tags.length > 0) {
-    where.recipeTags = {
-      some: {
-        tag: {
-          name: {
-            in: filter.tags,
-          },
-        },
-      },
-    };
-  }
-
-  if (filter.title) {
-    where.title = {
-      contains: filter.title,
-      mode: "insensitive",
-    };
-  }
-
-  if (filter.rating) {
-    where.averageRating = {
-      gte: filter.rating,
-    };
-  }
-
-  return where;
-};
-
-const buildOrderBy = (sort: Sort) => {
-  const orderBy: Prisma.RecipeOrderByWithAggregationInput = {};
-
-  if (sort) {
-    if (sort.field === "title") {
-      orderBy.title = sort.direction;
-    } else if (sort.field === "createdAt") {
-      orderBy.createdAt = sort.direction;
-    } else if (sort.field === "averageRating") {
-      orderBy.averageRating = sort.direction;
-    }
-  }
-
-  return orderBy;
-};

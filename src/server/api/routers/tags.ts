@@ -1,32 +1,21 @@
 import { z } from "zod";
-
-import { createTRPCRouter, publicProcedure } from "y/server/api/trpc";
-const paginationInputSchema = {
-  limit: z.number().default(10),
-  page: z.number().default(1),
-};
+import { createTRPCRouter, protectedProcedure } from "y/server/api/trpc";
 
 export const tagsRouter = createTRPCRouter({
-  suggestsTags: publicProcedure
-    .input(z.object({ text: z.string(), ...paginationInputSchema }))
+  suggestsTags: protectedProcedure
+    .input(z.object({ searchString: z.string() }))
     .query(({ ctx, input }) => {
-      const { page, limit, text } = input;
-      const skip = (page - 1) * limit;
-      // Query 14
+      const userID = ctx.session?.user.id;
+      const { searchString } = input;
+
       return ctx.prisma.tag.findMany({
         where: {
-          name: {
-            startsWith: text,
-          },
-          count: {
-            gt: 0,
-          },
+          userID,
+          name: { startsWith: searchString },
         },
         orderBy: {
           count: "desc",
         },
-        take: limit,
-        skip,
       });
     }),
 });
