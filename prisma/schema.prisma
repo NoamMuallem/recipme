@@ -42,16 +42,16 @@ model Session {
 }
 
 model User {
-  id              String     @id @default(cuid())
-  name            String?
-  email           String?    @unique
-  emailVerified   DateTime?
-  image           String?
-  accounts        Account[]
-  sessions        Session[]
-  recipes         Recipe[]
-  favoritsRecipes Favorite[]
-  Rating          Rating[]
+  id               String            @id @default(cuid())
+  name             String?
+  email            String?           @unique
+  emailVerified    DateTime?
+  image            String?
+  accounts         Account[]
+  sessions         Session[]
+  recipes          Recipe[]
+  ingrediantsNames IngredientsName[]
+  tags             Tag[]
 }
 
 model VerificationToken {
@@ -63,23 +63,18 @@ model VerificationToken {
 }
 
 model Recipe {
-  id            String       @id @default(cuid())
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  title         String
-  user          User         @relation(fields: [userId], references: [id])
-  userId        String
-  ingredients   Ingredient[]
-  description   String
-  yield         Int
-  directions    String
-  ratings       Rating[]
-  averageRating Float        @default(0.0)
-  image         String
-  favoritedBy   Favorite[]
-  recipeTags    RecipeTag[]
-
-  @@index([userId, averageRating, createdAt]) // Index for Query 1, 3 and 4
+  id          String       @id @default(cuid())
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  title       String
+  user        User         @relation(fields: [userId], references: [id])
+  userId      String
+  ingredients Ingredient[]
+  description String
+  yield       Int
+  directions  String
+  image       String
+  recipeTags  RecipeTag[]
 }
 
 model Ingredient {
@@ -88,10 +83,8 @@ model Ingredient {
   ingredientNameId String
   unit             String
   amount           Float
-  recipeID         String
   recipe           Recipe          @relation(fields: [recipeID], references: [id])
-
-  @@index([recipeID]) // Index for Query 6 and 8
+  recipeID         String
 }
 
 model IngredientsName {
@@ -100,33 +93,8 @@ model IngredientsName {
   //to keep track on popular one's and "kill" dead ones
   count       Int
   ingredients Ingredient[]
-
-  @@index([name, count]) // Index for Query 14 and 15
-}
-
-//relation of many to many, intermidiat table to handle the user - recipe rating matching
-model Rating {
-  user     User    @relation(fields: [userID], references: [id])
-  userID   String
-  stars    Int
-  recipeID String
-  recipe   Recipe  @relation(fields: [recipeID], references: [id])
-  comment  String?
-
-  @@id([userID, recipeID]) // Unique constraint for Query 17
-  @@index([userID, recipeID]) // Index for Query 19 and 20
-}
-
-//relation of many to many, intermidiat table to handle the user - recipe favorit matching
-model Favorite {
-  user     User   @relation(fields: [userID], references: [id])
-  userID   String
-  recipe   Recipe @relation(fields: [recipeID], references: [id])
-  recipeID String
-
-  @@id([userID, recipeID]) // Unique constraint for Query 5
-  @@index([userID, recipeID]) // Index for Query 5
-  @@map("Favorits")
+  user        User         @relation(fields: [userID], references: [id])
+  userID      String
 }
 
 model RecipeTag {
@@ -136,8 +104,6 @@ model RecipeTag {
   recipeID String
 
   @@id([tagID, recipeID]) // Unique constraint for Query 10
-  @@index([tagID, recipeID]) // Index for Query 10
-  @@map("RecipeTag")
 }
 
 model Tag {
@@ -146,6 +112,6 @@ model Tag {
   recipes RecipeTag[]
   //to keep track on popular one's and "kill" dead ones
   count   Int
-
-  @@index([name, count]) // Index for Query 3, 4, and 14
+  user    User        @relation(fields: [userID], references: [id])
+  userID  String
 }
