@@ -4,29 +4,21 @@ import Head from "next/head";
 import { useState } from "react";
 import Filters from "y/components/filters";
 import Spinner from "y/components/spinner";
-import { type Filter, type Sort } from "y/server/api/routers/recipes";
+import { type Filter } from "y/server/api/routers/recipes";
 import { api } from "y/utils/api";
 import { useRouter } from "next/router";
 
 const Home: NextPage = () => {
-  const [sort, setSort] = useState<Sort>({
-    direction: "desc",
-    field: "createdAt",
-  });
   const [filter, setFilter] = useState<Filter>({
-    ingredients: [],
-    rating: 0,
-    tags: [],
-    title: "",
+    ingredientNames: [],
+    tagNames: [],
+    titleSubstring: "",
   });
 
-  const { data, isLoading } = api.recipe.authGetRecipes.useQuery({
+  const { data, isLoading } = api.recipe.getRecipes.useQuery({
     filter,
-    sort,
     pagination: {},
   });
-
-  console.log({ data });
 
   return (
     <>
@@ -36,12 +28,7 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <>
-        <Filters
-          filters={filter}
-          sort={sort}
-          setFilter={setFilter}
-          setSort={setSort}
-        />
+        <Filters filters={filter} setFilter={setFilter} />
         <div className="mx-auto max-w-7xl columns-3 space-y-4">
           {isLoading ? (
             <Spinner />

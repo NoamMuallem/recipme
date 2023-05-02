@@ -3,18 +3,18 @@ import IngredientSelector from "y/components/ingredientsSelector";
 import TagSelector from "y/components/tagSelector";
 import { type RecipeInput } from "y/server/api/routers/recipes";
 import { api } from "y/utils/api";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { Units } from "y/index.d";
 
 const CreateRecipe: React.FC = () => {
   const { mutate } = api.recipe.createRecipe.useMutation();
-  const { push } = useRouter();
+  // const { push } = useRouter();
 
   const [recipe, setRecipe] = useState<RecipeInput>({
     title: defaultTitle,
     ingredients: [],
     description: defaultDirections,
-    yield: defaultYeild,
+    yieldValue: defaultYeild,
     directions: defaultDescription,
     image: defaultImage,
     tags: [],
@@ -24,7 +24,7 @@ const CreateRecipe: React.FC = () => {
     try {
       const newRecipe = mutate(recipe);
       console.log("New recipe created:", newRecipe);
-      push("/");
+      // push("/");
     } catch (error) {
       console.error("Failed to create recipe:", error);
     }
@@ -90,9 +90,9 @@ const CreateRecipe: React.FC = () => {
             <input
               type="number"
               className="input-bordered input"
-              value={recipe.yield}
+              value={recipe.yieldValue}
               onChange={(e) =>
-                setRecipe({ ...recipe, yield: Number(e.target.value) })
+                setRecipe({ ...recipe, yieldValue: Number(e.target.value) })
               }
             />
           </div>
