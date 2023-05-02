@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import IngredientSelector from "y/components/ingredientsSelector";
-import TagSelector from "y/components/tagSelector";
+import IngredientSelector from "y/components/features/ingredientsSelector";
+import TagSelector from "y/components/features/tagSelector";
 import { type RecipeInput } from "y/server/api/routers/recipes";
 import { api } from "y/utils/api";
 // import { useRouter } from "next/navigation";

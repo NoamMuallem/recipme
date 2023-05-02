@@ -4,7 +4,7 @@ import { useDebounce } from "use-debounce";
 import { api } from "y/utils/api";
 import { NUMBER_OF_CHARACTERS_NEEDED_FOR_INGREDIENTS_TYPEAHEAD } from "y/constants";
 import { Units } from "y/index.d";
-import { Autocomplete } from "./autocomplete";
+import { Autocomplete } from "../base/autocomplete";
 
 interface IngredientNameProps {
   onSelect: (name: string | string[]) => void;

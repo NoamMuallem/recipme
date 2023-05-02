@@ -1,13 +1,9 @@
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import UserFavorite from "y/components/racipeFavorite";
-import RecipeUserRating from "y/components/recipeRating";
-import Spinner from "y/components/spinner";
+import Spinner from "y/components/base/spinner";
 import { api } from "y/utils/api";
 
 const Recipe = () => {
   const router = useRouter();
-  const { data: sessionData } = useSession();
   const { id: recipeID } = router.query;
   const { data, isLoading, error } = api.recipe.getOne.useQuery(
     {
@@ -69,13 +65,6 @@ const Recipe = () => {
           </div>
         </div>
       </div>
-
-      {sessionData?.user && typeof recipeID === "string" && (
-        <>
-          <RecipeUserRating recipeID={recipeID} />
-          <UserFavorite recipeID={recipeID} />
-        </>
-      )}
     </div>
   );
 };

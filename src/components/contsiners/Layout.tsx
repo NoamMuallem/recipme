@@ -1,5 +1,5 @@
-import { ReactNode } from "react";
-import { Header } from "./header";
+import { type ReactNode } from "react";
+import { Header } from "../features/header";
 
 const Layout = ({ children }: { children: ReactNode }) => {
   return (

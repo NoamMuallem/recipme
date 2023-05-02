@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { type Tag } from "@prisma/client";
 import { api } from "y/utils/api";
 import { useDebounce } from "use-debounce";
-import { Autocomplete } from "./autocomplete";
+import { Autocomplete } from "../base/autocomplete";
 
 interface AsyncSelectProps {
   onSelect: (value: string | string[]) => void;

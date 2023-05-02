@@ -111,13 +111,18 @@ export const recipeRouter = createTRPCRouter({
       return ctx.prisma.recipe.findMany({
         where: {
           userId,
-          title: titleSubstring ? { contains: titleSubstring } : undefined,
-          ingredients: ingredientNames
-            ? { every: { ingredientName: { name: { in: ingredientNames } } } }
-            : undefined,
-          recipeTags: tagNames
-            ? { every: { tag: { name: { in: tagNames } } } }
-            : undefined,
+          title:
+            titleSubstring && titleSubstring.trim() !== ""
+              ? { contains: titleSubstring }
+              : undefined,
+          ingredients:
+            ingredientNames && ingredientNames.length > 0
+              ? { every: { ingredientName: { name: { in: ingredientNames } } } }
+              : undefined,
+          recipeTags:
+            tagNames && tagNames.length > 0
+              ? { every: { tag: { name: { in: tagNames } } } }
+              : undefined,
         },
         orderBy: {
           createdAt: "desc",
