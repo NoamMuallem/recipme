@@ -106,11 +106,11 @@ export const recipeRouter = createTRPCRouter({
     )
     .query(({ ctx, input }) => {
       const { titleSubstring, ingredientNames, tagNames } = input.filter;
-      const userId = ctx.session.user.id;
+      const userID = ctx.session.user.id;
 
       return ctx.prisma.recipe.findMany({
         where: {
-          userId,
+          userID,
           title:
             titleSubstring && titleSubstring.trim() !== ""
               ? { contains: titleSubstring }
@@ -294,7 +294,7 @@ export const recipeRouter = createTRPCRouter({
         },
       });
 
-      if (!recipe || recipe.userId !== userID) {
+      if (!recipe || recipe.userID !== userID) {
         throw new Error("Recipe not found or unauthorized access");
       }
 

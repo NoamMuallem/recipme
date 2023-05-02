@@ -67,14 +67,16 @@ model Recipe {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   title       String
-  user        User         @relation(fields: [userId], references: [id])
-  userId      String
+  user        User         @relation(fields: [userID], references: [id])
+  userID      String
   ingredients Ingredient[]
   description String
   yield       Int
   directions  String
   image       String
   recipeTags  RecipeTag[]
+
+  @@index([createdAt, userID])
 }
 
 model Ingredient {
@@ -95,6 +97,8 @@ model IngredientsName {
   ingredients Ingredient[]
   user        User         @relation(fields: [userID], references: [id])
   userID      String
+
+  @@index([name, userID, count])
 }
 
 model RecipeTag {
@@ -114,4 +118,6 @@ model Tag {
   count   Int
   user    User        @relation(fields: [userID], references: [id])
   userID  String
+
+  @@index([name, userID, count])
 }
