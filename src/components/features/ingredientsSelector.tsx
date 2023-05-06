@@ -109,6 +109,7 @@ const IngredientsInput = ({
         type="number"
         className="input-bordered input mr-2"
         placeholder="Amount"
+        min={0}
         value={amount}
         onChange={(e) => {
           setAmount(Number(e.target.value));
