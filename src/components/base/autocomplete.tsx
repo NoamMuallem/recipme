@@ -9,6 +9,7 @@ interface AutocompleteProps {
   setInputValue: (value: string) => void;
   options: string[];
   isOptionsLoading?: boolean;
+  placeholder?: string;
 }
 
 export const Autocomplete = ({
@@ -19,6 +20,7 @@ export const Autocomplete = ({
   isOptionsLoading,
   isMulti = false,
   freeSolo = false,
+  placeholder,
 }: AutocompleteProps) => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -73,7 +75,7 @@ export const Autocomplete = ({
           <input
             type="text"
             className="input-bordered input w-full"
-            placeholder="Search"
+            placeholder={placeholder}
             value={inputValue}
             onChange={(e) => {
               const value = e.target.value;

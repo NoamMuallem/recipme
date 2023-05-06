@@ -10,6 +10,7 @@ interface AsyncSelectProps {
   freeSolo?: boolean;
   optionsToHide?: string[];
   externalValue?: string;
+  placeholder?: string;
 }
 
 const AsyncSelect = ({
@@ -18,6 +19,7 @@ const AsyncSelect = ({
   freeSolo = false,
   optionsToHide = [],
   externalValue,
+  placeholder,
 }: AsyncSelectProps) => {
   const [options, setOptions] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
@@ -50,6 +52,7 @@ const AsyncSelect = ({
     <Autocomplete
       inputValue={inputValue}
       setInputValue={(value) => setInputValue(value)}
+      placeholder={placeholder}
       onSelect={onSelect}
       options={options}
       freeSolo={freeSolo}

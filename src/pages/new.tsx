@@ -191,6 +191,7 @@ const CreateRecipe: React.FC = () => {
             {recipe.tags.map((_tag, index) => (
               <div key={index} className="mb-1">
                 <TagSelector
+                  placeholder="Tag name"
                   optionsToHide={recipe.tags.map((tag) => tag.name)}
                   freeSolo
                   externalValue={recipe.tags[index]?.name}

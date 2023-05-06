@@ -16,10 +16,8 @@ const Filters = ({
   return (
     <div className="my-5 flex w-full flex-wrap justify-evenly rounded-md bg-accent-content bg-opacity-30 py-2 backdrop-blur-lg">
       <div className="flex items-center">
-        <label htmlFor="title" className="mr-2">
-          Title
-        </label>
         <input
+          placeholder="title"
           id="title"
           type="text"
           value={filters.titleSubstring}
@@ -30,6 +28,7 @@ const Filters = ({
         />
       </div>
       <TagSelector
+        placeholder="Tags names"
         isMulti
         optionsToHide={filters.tagNames}
         onSelect={(values: string | string[]) => {
@@ -40,6 +39,7 @@ const Filters = ({
       />
       <IngredientNameAutocomplete
         isMulti
+        placeholder="Ingredients names"
         optionsToHide={filters.ingredientNames}
         onSelect={(value: string | string[]) => {
           if (Array.isArray(value)) {

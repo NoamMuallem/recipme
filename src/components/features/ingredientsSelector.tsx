@@ -12,6 +12,7 @@ interface IngredientNameProps {
   isMulti?: boolean;
   optionsToHide?: string[];
   externalValue?: string;
+  placeholder?: string;
 }
 
 export const IngredientNameAutocomplete = ({
@@ -20,6 +21,7 @@ export const IngredientNameAutocomplete = ({
   isMulti = false,
   optionsToHide = [],
   externalValue,
+  placeholder,
 }: IngredientNameProps) => {
   const [options, setOptions] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
@@ -69,6 +71,7 @@ export const IngredientNameAutocomplete = ({
   return (
     <Autocomplete
       inputValue={inputValue}
+      placeholder={placeholder}
       setInputValue={(value) => setInputValue(value)}
       onSelect={onSelect}
       options={options}
@@ -133,6 +136,7 @@ const IngredientsInput = ({
       <IngredientNameAutocomplete
         externalValue={externalValue}
         freeSolo
+        placeholder="name"
         optionsToHide={optionsToHide}
         onSelect={(selectedName: string | string[]) => {
           if (!Array.isArray(selectedName)) {
