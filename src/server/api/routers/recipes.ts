@@ -2,6 +2,7 @@ import { Units } from "y/index.d";
 import { createTRPCRouter } from "y/server/api/trpc";
 import { z } from "zod";
 import { protectedProcedure, publicProcedure } from "./../trpc";
+import { uploadBase64 } from "y/server/cloudinary";
 
 export type Filter = {
   ingredientNames?: string[];
@@ -148,6 +149,13 @@ export const recipeRouter = createTRPCRouter({
       } = input;
       const userID = ctx.session.user.id;
 
+      let coudinaryImageUrl = image;
+      try {
+        coudinaryImageUrl = await uploadBase64(image);
+      } catch (e) {
+        console.error(e);
+      }
+
       //Query 7
       return await ctx.prisma.recipe.create({
         data: {
@@ -155,7 +163,7 @@ export const recipeRouter = createTRPCRouter({
           description,
           yield: yieldValue,
           directions,
-          image,
+          image: coudinaryImageUrl,
           user: { connect: { id: userID } },
           recipeTags: {
             create: tags.map((tag) => ({
