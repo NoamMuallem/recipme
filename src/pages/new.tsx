@@ -165,7 +165,6 @@ const CreateRecipe: React.FC = () => {
             {recipe.tags.map((_tag, index) => (
               <div key={index} className="mb-1">
                 <TagSelector
-                  isMulti
                   freeSolo
                   onSelect={(value: string | string[]) => {
                     if (!Array.isArray(value)) {
