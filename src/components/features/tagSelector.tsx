@@ -9,6 +9,7 @@ interface AsyncSelectProps {
   isMulti?: boolean;
   freeSolo?: boolean;
   optionsToHide?: string[];
+  externalValue?: string;
 }
 
 const AsyncSelect = ({
@@ -16,6 +17,7 @@ const AsyncSelect = ({
   isMulti = false,
   freeSolo = false,
   optionsToHide = [],
+  externalValue,
 }: AsyncSelectProps) => {
   const [options, setOptions] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
@@ -25,6 +27,11 @@ const AsyncSelect = ({
     api.tags.suggestsTags.useQuery({
       searchString: debouncedInputValue,
     });
+
+  useEffect(() => {
+    if (!externalValue) return;
+    setInputValue(externalValue);
+  }, [externalValue]);
 
   useEffect(() => {
     if (tagsOptions) {

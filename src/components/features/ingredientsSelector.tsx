@@ -11,6 +11,7 @@ interface IngredientNameProps {
   freeSolo?: boolean;
   isMulti?: boolean;
   optionsToHide?: string[];
+  externalValue?: string;
 }
 
 export const IngredientNameAutocomplete = ({
@@ -18,6 +19,7 @@ export const IngredientNameAutocomplete = ({
   freeSolo = false,
   isMulti = false,
   optionsToHide = [],
+  externalValue,
 }: IngredientNameProps) => {
   const [options, setOptions] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
@@ -34,6 +36,11 @@ export const IngredientNameAutocomplete = ({
           NUMBER_OF_CHARACTERS_NEEDED_FOR_INGREDIENTS_TYPEAHEAD,
       }
     );
+
+  useEffect(() => {
+    if (!externalValue) return;
+    setInputValue(externalValue);
+  }, [externalValue]);
 
   useEffect(() => {
     if (ingredientsOptions) {
@@ -80,6 +87,7 @@ interface IngredientAutocompleteProps {
   initialAmount: number;
   initialUnit: Units;
   optionsToHide?: string[];
+  externalValue?: string;
 }
 
 const IngredientsInput = ({
@@ -87,6 +95,7 @@ const IngredientsInput = ({
   initialAmount,
   initialUnit,
   optionsToHide = [],
+  externalValue,
 }: IngredientAutocompleteProps) => {
   const [amount, setAmount] = useState<number>(initialAmount);
   const [unit, setUnit] = useState<Units>(initialUnit);
@@ -121,6 +130,7 @@ const IngredientsInput = ({
         />
       </div>
       <IngredientNameAutocomplete
+        externalValue={externalValue}
         freeSolo
         optionsToHide={optionsToHide}
         onSelect={(selectedName: string | string[]) => {

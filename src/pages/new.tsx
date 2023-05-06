@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import IngredientSelector from "y/components/features/ingredientsSelector";
 import TagSelector from "y/components/features/tagSelector";
 import { type RecipeInput } from "y/server/api/routers/recipes";
@@ -48,11 +48,27 @@ const CreateRecipe: React.FC = () => {
     setRecipe({ ...recipe, ingredients: newIngredients });
   };
 
+  const deleteIngredient = (index: number) => {
+    const newIngredients = [...recipe.ingredients];
+    newIngredients.splice(index, 1);
+    setRecipe({ ...recipe, ingredients: newIngredients });
+  };
+
   const handleTagChange = (index: number, tag: { name: string }) => {
     const newTags = [...recipe.tags];
     newTags[index] = tag;
     setRecipe({ ...recipe, tags: newTags });
   };
+
+  const deleteTag = (index: number) => {
+    const newTags = [...recipe.tags];
+    newTags.splice(index, 1);
+    setRecipe({ ...recipe, tags: newTags });
+  };
+
+  useEffect(() => {
+    console.log({ recipeTags: recipe.tags });
+  }, [recipe.tags]);
 
   return (
     <div className="container mx-auto p-4">
@@ -134,6 +150,7 @@ const CreateRecipe: React.FC = () => {
             {recipe.ingredients.map((ingredient, index) => (
               <div key={index} className="mb-1">
                 <IngredientSelector
+                  externalValue={recipe.ingredients[index]?.name}
                   optionsToHide={recipe.ingredients.map(
                     (ingredient) => ingredient.name
                   )}
@@ -143,6 +160,12 @@ const CreateRecipe: React.FC = () => {
                   initialAmount={ingredient.amount}
                   initialUnit={Units.CUP}
                 />
+                <button
+                  className="btn-warning btn"
+                  onClick={() => deleteIngredient(index)}
+                >
+                  delete
+                </button>
               </div>
             ))}
             <button
@@ -170,12 +193,19 @@ const CreateRecipe: React.FC = () => {
                 <TagSelector
                   optionsToHide={recipe.tags.map((tag) => tag.name)}
                   freeSolo
+                  externalValue={recipe.tags[index]?.name}
                   onSelect={(value: string | string[]) => {
                     if (!Array.isArray(value)) {
                       handleTagChange(index, { name: value });
                     }
                   }}
                 />
+                <button
+                  className="btn-warning btn"
+                  onClick={() => deleteTag(index)}
+                >
+                  delete
+                </button>
               </div>
             ))}
             <button
