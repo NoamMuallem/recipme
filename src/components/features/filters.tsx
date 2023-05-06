@@ -2,6 +2,7 @@ import React from "react";
 import { type Filter } from "y/server/api/routers/recipes";
 import TagSelector from "./tagSelector";
 import { IngredientNameAutocomplete } from "./ingredientsSelector";
+import { useRouter } from "next/router";
 
 const Filters = ({
   filters,
@@ -10,6 +11,8 @@ const Filters = ({
   filters: Filter;
   setFilter: (filter: Filter) => void;
 }) => {
+  const router = useRouter();
+
   return (
     <div className="my-5 flex w-full flex-wrap justify-evenly rounded-md bg-accent-content bg-opacity-30 py-2 backdrop-blur-lg">
       <div className="flex items-center">
@@ -42,6 +45,9 @@ const Filters = ({
           }
         }}
       />
+      <button className="btn" onClick={() => router.push("/new")}>
+        create
+      </button>
     </div>
   );
 };
