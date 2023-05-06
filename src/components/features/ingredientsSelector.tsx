@@ -101,8 +101,8 @@ const IngredientsInput = ({
           setInputValue={(value) => setUnit(value as Units)}
           options={unitOptions}
           onSelect={(selectedOptions) => {
-            if (selectedOptions.length > 0 && selectedOptions[0]) {
-              const selectedUnit = selectedOptions[0] as Units;
+            if (selectedOptions.length > 0 && selectedOptions) {
+              const selectedUnit = selectedOptions as Units;
               setUnit(selectedUnit);
               onSelect(name, amount, selectedUnit);
             }
