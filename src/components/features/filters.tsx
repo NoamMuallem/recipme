@@ -31,6 +31,7 @@ const Filters = ({
       </div>
       <TagSelector
         isMulti
+        optionsToHide={filters.tagNames}
         onSelect={(values: string | string[]) => {
           if (Array.isArray(values)) {
             setFilter({ ...filters, tagNames: values });
@@ -39,6 +40,7 @@ const Filters = ({
       />
       <IngredientNameAutocomplete
         isMulti
+        optionsToHide={filters.ingredientNames}
         onSelect={(value: string | string[]) => {
           if (Array.isArray(value)) {
             setFilter({ ...filters, ingredientNames: value });

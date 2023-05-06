@@ -8,12 +8,14 @@ interface AsyncSelectProps {
   onSelect: (value: string | string[]) => void;
   isMulti?: boolean;
   freeSolo?: boolean;
+  optionsToHide?: string[];
 }
 
 const AsyncSelect = ({
   onSelect,
   isMulti = false,
   freeSolo = false,
+  optionsToHide = [],
 }: AsyncSelectProps) => {
   const [options, setOptions] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
@@ -26,9 +28,16 @@ const AsyncSelect = ({
 
   useEffect(() => {
     if (tagsOptions) {
-      setOptions(tagsOptions.map((option: Tag) => option.name));
+      const allOptions = tagsOptions.map((option: Tag) => option.name);
+
+      const shouldShowOption = (option: string) =>
+        !optionsToHide.includes(option);
+
+      const optionsToShow = allOptions.filter(shouldShowOption);
+
+      setOptions(optionsToShow);
     }
-  }, [tagsOptions]);
+  }, [tagsOptions, optionsToHide]);
 
   return (
     <Autocomplete

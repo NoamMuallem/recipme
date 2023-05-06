@@ -134,6 +134,9 @@ const CreateRecipe: React.FC = () => {
             {recipe.ingredients.map((ingredient, index) => (
               <div key={index} className="mb-1">
                 <IngredientSelector
+                  optionsToHide={recipe.ingredients.map(
+                    (ingredient) => ingredient.name
+                  )}
                   onSelect={(name, amount, unit) =>
                     handleIngredientChange(index, name, amount, unit)
                   }
@@ -165,6 +168,7 @@ const CreateRecipe: React.FC = () => {
             {recipe.tags.map((_tag, index) => (
               <div key={index} className="mb-1">
                 <TagSelector
+                  optionsToHide={recipe.tags.map((tag) => tag.name)}
                   freeSolo
                   onSelect={(value: string | string[]) => {
                     if (!Array.isArray(value)) {

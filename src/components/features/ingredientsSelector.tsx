@@ -10,12 +10,14 @@ interface IngredientNameProps {
   onSelect: (name: string | string[]) => void;
   freeSolo?: boolean;
   isMulti?: boolean;
+  optionsToHide?: string[];
 }
 
 export const IngredientNameAutocomplete = ({
   onSelect,
   freeSolo = false,
   isMulti = false,
+  optionsToHide = [],
 }: IngredientNameProps) => {
   const [options, setOptions] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
@@ -35,11 +37,18 @@ export const IngredientNameAutocomplete = ({
 
   useEffect(() => {
     if (ingredientsOptions) {
-      setOptions(
-        ingredientsOptions.map((option: IngredientsName) => option.name)
+      const allOptions = ingredientsOptions.map(
+        (option: IngredientsName) => option.name
       );
+
+      const shouldShowOption = (option: string) =>
+        !optionsToHide.includes(option);
+
+      const optionsToShow = allOptions.filter(shouldShowOption);
+
+      setOptions(optionsToShow);
     }
-  }, [ingredientsOptions]);
+  }, [ingredientsOptions, optionsToHide]);
 
   //if the input length is lower then minimum hide all options
   useEffect(() => {
@@ -70,12 +79,14 @@ interface IngredientAutocompleteProps {
   onSelect: (name: string, amount: number, unit: Units) => void;
   initialAmount: number;
   initialUnit: Units;
+  optionsToHide?: string[];
 }
 
 const IngredientsInput = ({
   onSelect,
   initialAmount,
   initialUnit,
+  optionsToHide = [],
 }: IngredientAutocompleteProps) => {
   const [amount, setAmount] = useState<number>(initialAmount);
   const [unit, setUnit] = useState<Units>(initialUnit);
@@ -111,6 +122,7 @@ const IngredientsInput = ({
       </div>
       <IngredientNameAutocomplete
         freeSolo
+        optionsToHide={optionsToHide}
         onSelect={(selectedName: string | string[]) => {
           if (!Array.isArray(selectedName)) {
             setName(selectedName);
